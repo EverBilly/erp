@@ -19,33 +19,9 @@ services:
       - pos-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 10
-      start_period: 10s
-
-  #Redis para cache
-  redis:
-    image: redis:7-alpine
-    container_name: pos-redis
-    restart: always
-    ports:
-      - "6379:6379"
-    networks:
-      - pos-network
-    command: redis-server --appendonly yes
-
-  #Adminer para gestionar la base de datos Postgres
-  adminer:
-    image: adminer
-    container_name: pos-adminer
-    restart: always
-    ports:
-      - "8081:8080"
-    depends_on:
-      - db
-    networks:
-      - pos-network
+      retries: 5
 
 # Servicio de Productos (Java Spring Boot)
   backend:
@@ -61,15 +37,24 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pos_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      # SPRING_DATASOURCE_HIKARI_CONNECTION_TIMEOUT: 60000
-      # SPRING_DATASOURCE_HIKARI_INITIALIZATION_FAIL_TIMEOUT: 0
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-      # SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: 2
     ports:
       - "8080:8080"
     networks:
       - pos-network
     
+  #Adminer para gestionar la base de datos Postgres
+  adminer:
+    image: adminer
+    container_name: pos-adminer
+    restart: always
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+    networks:
+      - pos-network
+
   # Frontend React
   frontend:
     build: ./frontend
@@ -81,25 +66,9 @@ services:
     networks:
       - pos-network
 
-  # pgAdmin (Opcional - para administrar la BD)
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pos-pgadmin
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@pos.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
-    ports:
-      - "5050:80"
-    networks:
-      - pos-network
-    depends_on:
-      - db
-
 networks:
   pos-network:
     driver: bridge
-    name: pos-network
-    external: false
 
 volumes:
   db-data:
