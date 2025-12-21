@@ -1,6 +1,6 @@
 package com.pos.permiso.repository;
 
-import com.pos.permiso.model.Permiso;  // <-- Import actualizado
+import com.pos.permiso.model.Permiso;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
