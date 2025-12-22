@@ -80,3 +80,4 @@ networks:
 volumes:
   db-data:
   maven-repo:
+  
