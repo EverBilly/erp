@@ -1,0 +1,75 @@
+#VERSION SIMPLE
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: pos-postgres
+    env_file: .env
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+#      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - pos-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# Servicio de Productos (Java Spring Boot)
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pos-backend
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pos_db
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8080:8080"
+    networks:
+      - pos-network
+    
+  #Adminer para gestionar la base de datos Postgres
+  adminer:
+    image: adminer
+    container_name: pos-adminer
+    restart: always
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+    networks:
+      - pos-network
+
+  # Frontend React
+  frontend:
+    build: ./frontend
+    container_name: pos-frontend
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - pos-network
+
+networks:
+  pos-network:
+    driver: bridge
+
+volumes:
+  db-data:
+  maven-repo:
