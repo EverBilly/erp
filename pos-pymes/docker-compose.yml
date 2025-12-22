@@ -6,6 +6,7 @@ services:
     image: postgres:15-alpine
     container_name: pos-postgres
     env_file: .env
+    restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -28,6 +29,10 @@ services:
     build: 
       context: ./backend
       dockerfile: Dockerfile
+      args:        
+        # Para desarrollo, desactivar cache si quieres
+        MAVEN_OPTS: "-Dmaven.wagon.http.retryHandler.count=3"
+    restart: unless-stopped
     container_name: pos-backend
     depends_on:
       db:
@@ -38,6 +43,8 @@ services:
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    volumes:
+      - maven-repo:/root/.m2  # 👈 CACHE de Maven
     ports:
       - "8080:8080"
     networks:
