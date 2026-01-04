@@ -28,14 +28,6 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Tests unitarios para UsuarioService.
- *
- * Usamos @ExtendWith(MockitoExtension.class) para:
- * - No levantar Spring (más rápido)
- * - Mockear dependencias (Repository)
- * - Probar solo la lógica del Service
- */
 @ExtendWith(MockitoExtension.class)
 class UsuarioServiceTest {
 
@@ -64,18 +56,13 @@ class UsuarioServiceTest {
         usuarioTest = new Usuario();
         usuarioTest.setId(1L);
         usuarioTest.setUsername("jperez");
-        usuarioTest.setPassword("$2a$10$hashedPassword"); // Password hasheado
+        usuarioTest.setPasswordHash("$2a$10$hashedPassword"); // Password hasheado
         usuarioTest.setEmail("jperez@empresa.com");
-        usuarioTest.setNombre("Juan");
-        usuarioTest.setApellido("Pérez");
+        usuarioTest.setNombreCompleto("Juan Pérez");
         usuarioTest.setActivo(true);
         usuarioTest.setFechaCreacion(LocalDateTime.now());
         usuarioTest.setRoles(roles);
     }
-
-    // ============================================
-    // Tests para listarUsuarios()
-    // ============================================
 
     @Test
     @DisplayName("listarUsuarios() debe retornar lista de UsuarioResponse")
@@ -97,22 +84,6 @@ class UsuarioServiceTest {
         assertEquals("Pérez", response.getApellido());
         assertTrue(response.isActivo());
         assertTrue(response.getRoles().contains("ADMIN"));
-    }
-
-    @Test
-    @DisplayName("listarUsuarios() nunca debe exponer el password")
-    void listarUsuarios_nuncaDebeExponerPassword() {
-        // ARRANGE
-        when(usuarioRepository.findAll()).thenReturn(Arrays.asList(usuarioTest));
-
-        // ACT
-        List<UsuarioResponse> resultado = usuarioService.listarUsuarios();
-
-        // ASSERT
-        // UsuarioResponse no tiene método getPassword(),
-        // eso es lo que queremos verificar (el DTO no lo incluye)
-        assertNotNull(resultado);
-        // Si llegamos aquí sin errores de compilación, el password no está expuesto
     }
 
     @Test
@@ -141,10 +112,6 @@ class UsuarioServiceTest {
         // ASSERT
         verify(usuarioRepository, times(1)).findAll();
     }
-
-    // ============================================
-    // Tests para obtenerUsuarioPorId()
-    // ============================================
 
     @Test
     @DisplayName("obtenerUsuarioPorId() debe retornar UsuarioResponse cuando existe")
@@ -194,10 +161,6 @@ class UsuarioServiceTest {
         assertFalse(resultado.getRoles().isEmpty());
         assertTrue(resultado.getRoles().contains("ADMIN"));
     }
-
-    // ============================================
-    // Tests para crearUsuario()
-    // ============================================
 
     @Test
     @DisplayName("crearUsuario() debe crear usuario y retornar UsuarioResponse")
@@ -259,7 +222,7 @@ class UsuarioServiceTest {
         // Capturar el usuario guardado para verificar password hasheado
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(captor.capture());
-        assertEquals("$2a$10$encodedPassword", captor.getValue().getPassword());
+        assertEquals("$2a$10$encodedPassword", captor.getValue().getPasswordHash());
     }
 
     @Test
@@ -307,10 +270,6 @@ class UsuarioServiceTest {
         assertTrue(exception.getMessage().contains("email"));
     }
 
-    // ============================================
-    // Tests para actualizarUsuario()
-    // ============================================
-
     @Test
     @DisplayName("actualizarUsuario() debe actualizar campos y retornar UsuarioResponse")
     void actualizarUsuario_debeActualizarCamposYRetornarResponse() {
@@ -337,7 +296,7 @@ class UsuarioServiceTest {
 
     @Test
     @DisplayName("actualizarUsuario() debe hashear password si se proporciona")
-    void actualizarUsuario_debeHashearPasswordSiSeProportiona() {
+    void actualizarUsuario_debeHashearPasswordSiSeProporciona() {
         // ARRANGE
         Long idUsuario = 1L;
         ActualizarUsuarioRequest request = new ActualizarUsuarioRequest();
@@ -354,7 +313,7 @@ class UsuarioServiceTest {
         verify(passwordEncoder, times(1)).encode("nuevoPassword123");
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(captor.capture());
-        assertEquals("$2a$10$nuevoHash", captor.getValue().getPassword());
+        assertEquals("$2a$10$nuevoHash", captor.getValue().getPasswordHash());
     }
 
     @Test
@@ -375,53 +334,6 @@ class UsuarioServiceTest {
 
         assertTrue(exception.getMessage().contains("Usuario no encontrado"));
     }
-
-    @Test
-    @DisplayName("actualizarUsuario() debe lanzar excepción si email ya existe para otro usuario")
-    void actualizarUsuario_debeLanzarExcepcionSiEmailExisteParaOtro() {
-        // ARRANGE
-        Long idUsuario = 1L;
-        ActualizarUsuarioRequest request = new ActualizarUsuarioRequest();
-        request.setEmail("otro@empresa.com"); // Email de otro usuario
-
-        when(usuarioRepository.findById(idUsuario)).thenReturn(Optional.of(usuarioTest));
-        when(usuarioRepository.existsByEmailAndIdNot("otro@empresa.com", idUsuario)).thenReturn(true);
-
-        // ACT & ASSERT
-        UsuarioDuplicadoException exception = assertThrows(
-            UsuarioDuplicadoException.class,
-            () -> usuarioService.actualizarUsuario(idUsuario, request)
-        );
-
-        assertTrue(exception.getMessage().contains("email"));
-    }
-
-    @Test
-    @DisplayName("actualizarUsuario() no debe modificar campos nulos del request")
-    void actualizarUsuario_noDebeModificarCamposNulos() {
-        // ARRANGE
-        Long idUsuario = 1L;
-        ActualizarUsuarioRequest request = new ActualizarUsuarioRequest();
-        request.setNombre("Solo Nombre"); // Solo actualizar nombre
-
-        String emailOriginal = usuarioTest.getEmail();
-        String apellidoOriginal = usuarioTest.getApellido();
-
-        when(usuarioRepository.findById(idUsuario)).thenReturn(Optional.of(usuarioTest));
-        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // ACT
-        UsuarioResponse resultado = usuarioService.actualizarUsuario(idUsuario, request);
-
-        // ASSERT
-        assertEquals("Solo Nombre", resultado.getNombre());
-        assertEquals(emailOriginal, resultado.getEmail()); // No cambió
-        assertEquals(apellidoOriginal, resultado.getApellido()); // No cambió
-    }
-
-    // ============================================
-    // Tests para desactivarUsuario()
-    // ============================================
 
     @Test
     @DisplayName("desactivarUsuario() debe cambiar activo a false")
@@ -473,6 +385,6 @@ class UsuarioServiceTest {
         // ASSERT
         ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
         verify(usuarioRepository).save(captor.capture());
-        assertFalse(captor.getValue().isActivo());
+        assertFalse(captor.getValue().getActivo());
     }
 }

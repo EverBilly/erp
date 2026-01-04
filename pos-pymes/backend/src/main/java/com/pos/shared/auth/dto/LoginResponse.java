@@ -1,56 +1,86 @@
 package com.pos.shared.auth.dto;
 
-import java.util.List;
+import org.springframework.security.core.GrantedAuthority;
+import java.util.Collection;
 
 public class LoginResponse {
+    
     private String token;
-    private String type = "Bearer";
+    private String tokenType = "Bearer";
     private Long id;
     private String username;
     private String email;
-    private String nombre;
-    private String apellido;
-    private List<String> roles;
-    private List<String> permisos;
+    private String nombreCompleto;
+    private Collection<? extends GrantedAuthority> roles;
 
-    public LoginResponse(String token, Long id, String username, String email,
-                         String nombre, String apellido, List<String> roles,
-                         List<String> permisos) {
+    public LoginResponse() {}
+    
+    public LoginResponse(String token, String tokenType, Long id, 
+                        String username, String email, String nombreCompleto,
+                        Collection<? extends GrantedAuthority> roles) {
         this.token = token;
+        this.tokenType = tokenType;
         this.id = id;
         this.username = username;
         this.email = email;
-        this.nombre = nombre;
-        this.apellido = apellido;
+        this.nombreCompleto = nombreCompleto;
         this.roles = roles;
-        this.permisos = permisos;
+    }
+    
+    // Getters
+    public String getToken() {
+        return token;
     }
 
-    // Getters y Setters
-    public String getToken() { return token; }
-    public void setToken(String token) { this.token = token; }
+    public void setToken(String token) {
+        this.token = token;
+    }
+    
+    public String getTokenType() {
+        return tokenType;
+    }
 
-    public String getType() { return type; }
-    public void setType(String type) { this.type = type; }
+    public void setTokenType(String tokenType) {
+        this.tokenType = tokenType;
+    }
+    
+    public Long getId() {
+        return id;
+    }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getUsername() {
+        return username;
+    }
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
+    
+    public String getEmail() {
+        return email;
+    }
 
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getNombreCompleto() {
+        return nombreCompleto;
+    }
 
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
+    public void setNombreCompleto(String nombreCompleto) {
+        this.nombreCompleto = nombreCompleto;
+    }
+    
+    public Collection<? extends GrantedAuthority> getRoles() {
+        return roles;
+    }
 
-    public String getApellido() { return apellido; }
-    public void setApellido(String apellido) { this.apellido = apellido; }
-
-    public List<String> getRoles() { return roles; }
-    public void setRoles(List<String> roles) { this.roles = roles; }
-
-    public List<String> getPermisos() { return permisos; }
-    public void setPermisos(List<String> permisos) { this.permisos = permisos; }
+    public void setRoles(Collection<? extends GrantedAuthority> roles) {
+        this.roles = roles;
+    }
 }

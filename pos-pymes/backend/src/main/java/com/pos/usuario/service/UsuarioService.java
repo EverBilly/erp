@@ -1,212 +1,144 @@
 package com.pos.usuario.service;
 
-import com.pos.usuario.dto.ActualizarUsuarioRequest;
-import com.pos.usuario.dto.CrearUsuarioRequest;
-import com.pos.usuario.dto.UsuarioResponse;
-import com.pos.usuario.exception.UsuarioDuplicadoException;
-import com.pos.usuario.exception.UsuarioNotFoundException;
 import com.pos.usuario.model.Usuario;
 import com.pos.usuario.repository.UsuarioRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService {
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
+    
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    
+    public UsuarioService(UsuarioRepository usuarioRepository, PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+    
+    @Transactional(readOnly = true)
     public List<Usuario> findAll() {
         return usuarioRepository.findAll();
     }
-
-    /**
-     * Lista todos los usuarios como DTOs (sin exponer password).
-     * Este es el método que debe usar el Controller.
-     */
-    public List<UsuarioResponse> listarUsuarios() {
-        return usuarioRepository.findAll().stream()
-                .map(this::convertirAResponse)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Obtiene un usuario por ID y lo retorna como DTO.
-     * Lanza excepción si no existe.
-     */
-    public UsuarioResponse obtenerUsuarioPorId(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new UsuarioNotFoundException(id));
-        return convertirAResponse(usuario);
-    }
-
-    /**
-     * Crea un nuevo usuario desde un DTO de request.
-     * Valida unicidad de username y email.
-     * Hashea el password antes de guardar.
-     */
-    @Transactional
-    public UsuarioResponse crearUsuario(CrearUsuarioRequest request) {
-        // Validar unicidad de username
-        if (usuarioRepository.existsByUsername(request.getUsername())) {
-            throw new UsuarioDuplicadoException("username", request.getUsername());
-        }
-
-        // Validar unicidad de email
-        if (usuarioRepository.existsByEmail(request.getEmail())) {
-            throw new UsuarioDuplicadoException("email", request.getEmail());
-        }
-
-        // Crear entidad Usuario desde el request
-        Usuario usuario = new Usuario();
-        usuario.setUsername(request.getUsername());
-        usuario.setEmail(request.getEmail());
-        usuario.setPassword(passwordEncoder.encode(request.getPassword()));
-        usuario.setNombre(request.getNombre());
-        usuario.setApellido(request.getApellido());
-        usuario.setActivo(true);
-
-        // Guardar y retornar como DTO
-        Usuario usuarioGuardado = usuarioRepository.save(usuario);
-        return convertirAResponse(usuarioGuardado);
-    }
-
-    /**
-     * Actualiza un usuario existente.
-     * Solo modifica los campos que vienen en el request (no nulos).
-     */
-    @Transactional
-    public UsuarioResponse actualizarUsuario(Long id, ActualizarUsuarioRequest request) {
-        // Buscar usuario existente
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new UsuarioNotFoundException(id));
-
-        // Validar unicidad de email si se proporciona uno nuevo
-        if (request.getEmail() != null && !request.getEmail().equals(usuario.getEmail())) {
-            if (usuarioRepository.existsByEmailAndIdNot(request.getEmail(), id)) {
-                throw new UsuarioDuplicadoException("email", request.getEmail());
-            }
-            usuario.setEmail(request.getEmail());
-        }
-
-        // Actualizar solo campos no nulos
-        if (request.getNombre() != null) {
-            usuario.setNombre(request.getNombre());
-        }
-        if (request.getApellido() != null) {
-            usuario.setApellido(request.getApellido());
-        }
-        if (request.getActivo() != null) {
-            usuario.setActivo(request.getActivo());
-        }
-        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
-            usuario.setPassword(passwordEncoder.encode(request.getPassword()));
-        }
-
-        // Guardar y retornar
-        Usuario usuarioActualizado = usuarioRepository.save(usuario);
-        return convertirAResponse(usuarioActualizado);
-    }
-
-    /**
-     * Desactiva un usuario (soft delete).
-     * El usuario no se elimina, solo se marca como inactivo.
-     */
-    @Transactional
-    public UsuarioResponse desactivarUsuario(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new UsuarioNotFoundException(id));
-
-        usuario.setActivo(false);
-        Usuario usuarioDesactivado = usuarioRepository.save(usuario);
-        return convertirAResponse(usuarioDesactivado);
-    }
-
-    /**
-     * Convierte una entidad Usuario a UsuarioResponse.
-     * Método privado para no exponer detalles de implementación.
-     */
-    private UsuarioResponse convertirAResponse(Usuario usuario) {
-        List<String> nombresRoles = usuario.getRoles().stream()
-                .map(rol -> rol.getNombre())
-                .collect(Collectors.toList());
-
-        return new UsuarioResponse(
-                usuario.getId(),
-                usuario.getUsername(),
-                usuario.getEmail(),
-                usuario.getNombre(),
-                usuario.getApellido(),
-                usuario.isActivo(),
-                usuario.getFechaCreacion(),
-                usuario.getFechaUltimoLogin(),
-                nombresRoles
-        );
-    }
-
+    
+    @Transactional(readOnly = true)
     public Optional<Usuario> findById(Long id) {
         return usuarioRepository.findById(id);
     }
-
+    
+    @Transactional(readOnly = true)
     public Optional<Usuario> findByUsername(String username) {
         return usuarioRepository.findByUsername(username);
     }
-
-    public Usuario save(Usuario usuario) {
-        if (usuario.getId() == null && usuario.getPassword() != null) {
-            usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
-        }
-        return usuarioRepository.save(usuario);
+    
+    @Transactional(readOnly = true)
+    public Optional<Usuario> findByEmail(String email) {
+        return usuarioRepository.findByEmail(email);
     }
-
+    
     @Transactional
-    public Usuario update(Long id, Usuario usuarioDetails) {
-        Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado con id: " + id));
-
-        usuario.setNombre(usuarioDetails.getNombre());
-        usuario.setApellido(usuarioDetails.getApellido());
-        usuario.setEmail(usuarioDetails.getEmail());
-        usuario.setActivo(usuarioDetails.isActivo());
-
-        // Si se proporciona una nueva contraseña, encriptarla
-        if (usuarioDetails.getPassword() != null && !usuarioDetails.getPassword().isEmpty()) {
-            usuario.setPassword(passwordEncoder.encode(usuarioDetails.getPassword()));
+    public Usuario save(Usuario usuario) {
+        if (usuario.getId() == null) {
+            usuario.setFechaCreacion(LocalDateTime.now());
         }
-
+        
+        if (usuario.getPasswordHash() != null && !usuario.getPasswordHash().isEmpty()) {
+            usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
+        }
+        
         return usuarioRepository.save(usuario);
     }
-
+    
+    @Transactional
     public void deleteById(Long id) {
         usuarioRepository.deleteById(id);
     }
-
+    
+    @Transactional(readOnly = true)
     public boolean existsByUsername(String username) {
         return usuarioRepository.existsByUsername(username);
     }
-
+    
+    @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
         return usuarioRepository.existsByEmail(email);
     }
-
-    public List<Usuario> searchByNombre(String nombre) {
-        return usuarioRepository.findByNombreContainingIgnoreCase(nombre);
+    
+    @Transactional(readOnly = true)
+    public boolean existsByEmailAndIdNot(String email, Long id) {
+        Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
+        return usuario.isPresent() && !usuario.get().getId().equals(id);
     }
-
-    public long countActivos() {
-        return usuarioRepository.countByActivoTrue();
+    
+    @Transactional
+    public void incrementarIntentosFallidos(Long usuarioId) {
+        usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
+            usuario.setIntentosLogin(usuario.getIntentosLogin() + 1);
+            usuarioRepository.save(usuario);
+        });
     }
-
-    public List<Usuario> findAllActivos() {
-        return usuarioRepository.findAllByActivoTrue();
+    
+    @Transactional
+    public void resetIntentosFallidos(Long usuarioId) {
+        usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
+            usuario.setIntentosLogin(0);
+            usuario.setBloqueadoHasta(null);
+            usuarioRepository.save(usuario);
+        });
+    }
+    
+    @Transactional
+    public void bloquearUsuario(Long usuarioId, LocalDateTime bloqueadoHasta) {
+        usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
+            usuario.setBloqueadoHasta(bloqueadoHasta);
+            usuarioRepository.save(usuario);
+        });
+    }
+    
+    @Transactional
+    public void actualizarUltimoLogin(Long usuarioId, LocalDateTime ultimoLogin) {
+        usuarioRepository.findById(usuarioId).ifPresent(usuario -> {
+            usuario.setUltimoLogin(ultimoLogin);
+            usuarioRepository.save(usuario);
+        });
+    }
+    
+    @Transactional(readOnly = true)
+    public List<Usuario> findByNombreContainingIgnoreCase(String nombre) {
+        return usuarioRepository.findAll().stream()
+                .filter(u -> u.getNombreCompleto() != null && 
+                           u.getNombreCompleto().toLowerCase().contains(nombre.toLowerCase()))
+                .toList();
+    }
+    
+    @Transactional(readOnly = true)
+    public long countByActivoTrue() {
+        return usuarioRepository.findAll().stream()
+                .filter(Usuario::getActivo)
+                .count();
+    }
+    
+    @Transactional(readOnly = true)
+    public List<Usuario> findAllByActivoTrue() {
+        return usuarioRepository.findAll().stream()
+                .filter(Usuario::getActivo)
+                .toList();
+    }
+    
+    @Transactional(readOnly = true)
+    public List<Usuario> findAllByRole(String roleName) {
+        return usuarioRepository.findAll().stream()
+                .filter(u -> u.getRoles().stream()
+                        .anyMatch(r -> r.getNombre().equalsIgnoreCase(roleName)))
+                .toList();
+    }
+    
+    public boolean validatePassword(String rawPassword, String encodedPassword) {
+        return passwordEncoder.matches(rawPassword, encodedPassword);
     }
 }

@@ -1,98 +1,121 @@
 package com.pos.shared.security;
 
 import com.pos.usuario.model.Usuario;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class UserPrincipal implements UserDetails {
-
+    
     private Long id;
     private String username;
-    private String password;
     private String email;
-    private String nombre;
-    private String apellido;
-    private boolean activo;
+    
+    @JsonIgnore
+    private String password;
+    
+    private String nombreCompleto;
+    private Boolean activo;
+    
     private Collection<? extends GrantedAuthority> authorities;
-
-    public UserPrincipal(Long id, String username, String password, String email,
-                         String nombre, String apellido, boolean activo,
-                         Collection<? extends GrantedAuthority> authorities) {
+    
+    public UserPrincipal(Long id, String username, String email, String password, 
+                        String nombreCompleto, Boolean activo,
+                        Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
-        this.password = password;
         this.email = email;
-        this.nombre = nombre;
-        this.apellido = apellido;
+        this.password = password;
+        this.nombreCompleto = nombreCompleto;
         this.activo = activo;
         this.authorities = authorities;
     }
-
+    
     public static UserPrincipal create(Usuario usuario) {
         List<GrantedAuthority> authorities = usuario.getRoles().stream()
-            .flatMap(rol -> rol.getPermisos().stream())
-            .map(permiso -> new SimpleGrantedAuthority(permiso.getNombre()))
-            .collect(Collectors.toList());
-
-        // También agregar el rol como autoridad
-        usuario.getRoles().forEach(rol ->
-            authorities.add(new SimpleGrantedAuthority("ROLE_" + rol.getNombre())));
-
+                .map(role -> new SimpleGrantedAuthority(role.getNombre()))
+                .collect(Collectors.toList());
+        
         return new UserPrincipal(
             usuario.getId(),
             usuario.getUsername(),
-            usuario.getPassword(),
             usuario.getEmail(),
-            usuario.getNombre(),
-            usuario.getApellido(),
-            usuario.isActivo(),
+            usuario.getPasswordHash(),
+            usuario.getNombreCompleto(),
+            usuario.getActivo(),
             authorities
         );
     }
-
-    public Long getId() { return id; }
-    public String getEmail() { return email; }
-    public String getNombre() { return nombre; }
-    public String getApellido() { return apellido; }
-    public String getNombreCompleto() { return nombre + " " + apellido; }
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+    
+    // Getters
+    public Long getId() {
+        return id;
     }
-
-    @Override
-    public String getPassword() {
-        return password;
+    
+    public String getEmail() {
+        return email;
     }
-
+    
+    public String getNombreCompleto() {
+        return nombreCompleto;
+    }
+    
+    public Boolean getActivo() {
+        return activo;
+    }
+    
+    // Implementación de UserDetails
     @Override
     public String getUsername() {
         return username;
     }
-
+    
+    @Override
+    public String getPassword() {
+        return password;
+    }
+    
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+    
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
-
+    
     @Override
     public boolean isAccountNonLocked() {
-        return true;
+        return activo;
     }
-
+    
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
-
+    
     @Override
     public boolean isEnabled() {
         return activo;
+    }
+    
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserPrincipal that = (UserPrincipal) o;
+        return Objects.equals(id, that.id);
+    }
+    
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

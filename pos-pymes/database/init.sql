@@ -113,7 +113,7 @@ INSERT INTO roles_permisos (rol_id, permiso_id) VALUES
 
 -- Crear usuario administrador por defecto
 INSERT INTO usuarios (username, password, email, nombre, apellido) VALUES
-('admin', '$2a$10$YourHashedPasswordHere', 'admin@pos.com', 'Administrador', 'Sistema');
+('admin', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', 'admin@pos.com', 'Administrador', 'Sistema');
 
 -- Asignar rol ADMIN al usuario admin
 INSERT INTO usuarios_roles (usuario_id, rol_id) VALUES (1, 1);

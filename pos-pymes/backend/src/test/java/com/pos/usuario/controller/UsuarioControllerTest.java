@@ -31,14 +31,6 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Tests de integración para UsuarioController.
- *
- * Usamos @WebMvcTest para:
- * - Cargar solo la capa web (más rápido que @SpringBootTest)
- * - Mockear el Service
- * - Probar endpoints HTTP reales
- */
 @WebMvcTest(UsuarioController.class)
 @Import(GlobalExceptionHandler.class)
 class UsuarioControllerTest {
@@ -69,10 +61,6 @@ class UsuarioControllerTest {
         );
     }
 
-    // ============================================
-    // Tests para GET /api/usuarios
-    // ============================================
-
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("GET /api/usuarios debe retornar lista de usuarios")
@@ -98,10 +86,6 @@ class UsuarioControllerTest {
         mockMvc.perform(get("/api/usuarios"))
             .andExpect(status().isUnauthorized());
     }
-
-    // ============================================
-    // Tests para GET /api/usuarios/{id}
-    // ============================================
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -130,10 +114,6 @@ class UsuarioControllerTest {
         mockMvc.perform(get("/api/usuarios/999"))
             .andExpect(status().isNotFound());
     }
-
-    // ============================================
-    // Tests para POST /api/usuarios
-    // ============================================
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -203,10 +183,6 @@ class UsuarioControllerTest {
             .andExpect(status().isConflict());
     }
 
-    // ============================================
-    // Tests para PUT /api/usuarios/{id}
-    // ============================================
-
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("PUT /api/usuarios/{id} debe actualizar y retornar 200")
@@ -252,10 +228,6 @@ class UsuarioControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
             .andExpect(status().isNotFound());
     }
-
-    // ============================================
-    // Tests para PATCH /api/usuarios/{id}/desactivar
-    // ============================================
 
     @Test
     @WithMockUser(roles = "ADMIN")

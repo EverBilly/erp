@@ -1,121 +1,88 @@
 package com.pos.shared.auth.service;
 
-import com.pos.shared.auth.dto.LoginRequest;  // <-- Import actualizado
-import com.pos.shared.auth.dto.LoginResponse;  // <-- Import actualizado
-import com.pos.usuario.model.Usuario;  // <-- Import actualizado
-import com.pos.usuario.repository.UsuarioRepository;  // <-- Import actualizado
-import com.pos.shared.security.JwtTokenProvider;  // <-- Import actualizado
-import com.pos.shared.security.UserPrincipal;  // <-- Import actualizado
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.pos.shared.auth.dto.LoginRequest;
+import com.pos.shared.auth.dto.LoginResponse;
+import com.pos.shared.security.JwtTokenProvider;
+import com.pos.shared.security.UserPrincipal;
+import com.pos.usuario.model.Usuario;
+import com.pos.usuario.repository.UsuarioRepository;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
-
-    private static final Logger logger = LoggerFactory.getLogger(AuthService.class);
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private JwtTokenProvider tokenProvider;
-
-    @Autowired
-    private UsuarioRepository usuarioRepository;
-
-    public LoginResponse authenticateUser(LoginRequest loginRequest) {
-        logger.info("=== INICIO authenticateUser ===");
-        logger.info("Username recibido: {}", loginRequest.getUsername());
-
-        try {
-            logger.info("Creando UsernamePasswordAuthenticationToken...");
-            UsernamePasswordAuthenticationToken authToken =
-                new UsernamePasswordAuthenticationToken(
-                    loginRequest.getUsername(),
-                    loginRequest.getPassword()
-                );
-
-            logger.info("Llamando authenticationManager.authenticate()...");
-            Authentication authentication = authenticationManager.authenticate(authToken);
-            logger.info("Autenticación exitosa!");
-
-            logger.info("Estableciendo SecurityContext...");
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
-            logger.info("Generando token JWT...");
-            String jwt = tokenProvider.generateToken(authentication);
-            logger.info("Token generado: {}...", jwt.substring(0, Math.min(50, jwt.length())));
-
-            logger.info("Obteniendo UserPrincipal...");
-            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
-            logger.info("UserPrincipal ID: {}", userPrincipal.getId());
-            logger.info("UserPrincipal Username: {}", userPrincipal.getUsername());
-
-            logger.info("Buscando usuario en BD...");
-            Usuario usuario = usuarioRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> {
-                    logger.error("Usuario no encontrado en BD con ID: {}", userPrincipal.getId());
-                    return new RuntimeException("Usuario no encontrado");
-                });
-
-            logger.info("Usuario encontrado: {}", usuario.getUsername());
-
-            // Actualizar fecha de último login
-            logger.info("Actualizando fecha de último login...");
-            usuario.setFechaUltimoLogin(LocalDateTime.now());
-            usuarioRepository.save(usuario);
-
-            // Obtener roles y permisos
-            logger.info("Obteniendo roles...");
-            List<String> roles = usuario.getRoles().stream()
-                .map(rol -> rol.getNombre())
-                .collect(Collectors.toList());
-            logger.info("Roles encontrados: {}", roles);
-
-            logger.info("Obteniendo permisos...");
-            List<String> permisos = usuario.getRoles().stream()
-                .flatMap(rol -> rol.getPermisos().stream())
-                .map(permiso -> permiso.getNombre())
-                .distinct()
-                .collect(Collectors.toList());
-            logger.info("Permisos encontrados: {} permisos", permisos.size());
-
-            logger.info("=== FIN authenticateUser - ÉXITO ===");
-
-            return new LoginResponse(
-                jwt,
-                usuario.getId(),
-                usuario.getUsername(),
-                usuario.getEmail(),
-                usuario.getNombre(),
-                usuario.getApellido(),
-                roles,
-                permisos
-            );
-
-        } catch (BadCredentialsException e) {
-            logger.error("=== BadCredentialsException ===");
-            logger.error("Credenciales incorrectas para usuario: {}", loginRequest.getUsername());
-            logger.error("Mensaje: {}", e.getMessage());
-            throw new RuntimeException("Usuario o contraseña incorrectos");
-
-        } catch (Exception e) {
-            logger.error("=== EXCEPCIÓN GENERAL ===");
-            logger.error("Error en authenticateUser: {}", e.getMessage());
-            logger.error("Tipo de excepción: {}", e.getClass().getName());
-            e.printStackTrace();
-            throw new RuntimeException("Error en autenticación: " + e.getClass().getSimpleName() + " - " + e.getMessage());
-        }
+    
+    private final AuthenticationManager authenticationManager;
+    private final JwtTokenProvider tokenProvider;
+    private final UsuarioRepository usuarioRepository;
+    private final PasswordEncoder passwordEncoder;
+    
+    public AuthService(AuthenticationManager authenticationManager,
+                      JwtTokenProvider tokenProvider,
+                      UsuarioRepository usuarioRepository,
+                      PasswordEncoder passwordEncoder) {
+        this.authenticationManager = authenticationManager;
+        this.tokenProvider = tokenProvider;
+        this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
+    
+    public LoginResponse authenticateUser(LoginRequest loginRequest) {
+        // 1. Verificar que el usuario existe
+        Usuario usuario = usuarioRepository.findByUsername(loginRequest.getUsername())
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        
+        // 2. Verificar que esté activo
+        if (!usuario.getActivo()) {
+            throw new RuntimeException("Usuario inactivo");
+        }
+
+        // 3. Verificar contraseña (solución simple sin AuthenticationManager)
+        if (!passwordEncoder.matches(loginRequest.getPassword(), usuario.getPasswordHash())) {
+            throw new RuntimeException("Credenciales inválidas");
+        }
+        
+        // 4. Crear autenticación simple
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            usuario.getUsername(),
+            null  // credentials null porque ya verificamos la contraseña
+        );
+        
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+        // 5. Generar token JWT
+        String jwt = tokenProvider.generateTokenFromUsername(usuario.getUsername());
+        
+        // 6. Actualizar último login
+        usuario.setUltimoLogin(LocalDateTime.now());
+        usuarioRepository.save(usuario);
+        
+        // 7. Crear UserPrincipal para la respuesta
+        UserPrincipal userPrincipal = UserPrincipal.create(usuario);
+
+        // 8. Crear y devolver respuesta
+        return new LoginResponse(
+            jwt,
+            "Bearer",
+            usuario.getId(),
+            usuario.getUsername(),
+            usuario.getEmail(),
+            usuario.getNombreCompleto(),
+            userPrincipal.getAuthorities()
+        );
+    }
+    
+    // public boolean validatePassword(String rawPassword, String encodedPassword) {
+    //     return passwordEncoder.matches(rawPassword, encodedPassword);
+    // }
+    
+    // public String encodePassword(String rawPassword) {
+    //     return passwordEncoder.encode(rawPassword);
+    // }
 }

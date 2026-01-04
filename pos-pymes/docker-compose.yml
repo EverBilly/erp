@@ -13,7 +13,8 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - db-data:/var/lib/postgresql/data
-#      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./database/usuarios.sql:/docker-entrypoint-initdb.d/usuarios.sql
+      # - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
     networks:
@@ -54,7 +55,7 @@ services:
   adminer:
     image: adminer
     container_name: pos-adminer
-    restart: always
+    restart: unless-stopped
     ports:
       - "8081:8080"
     depends_on:
@@ -81,3 +82,4 @@ volumes:
   db-data:
   maven-repo:
   
+# docker-compose up --build 2>&1 | tee docker-compose.log
