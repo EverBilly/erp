@@ -8,8 +8,8 @@ public class UsuarioResponse {
     private Long id;
     private String username;
     private String email;
-    private String nombre;
-    private String apellido;
+    private String nombreCompleto;
+    private String telefono;
     private boolean activo;
     private LocalDateTime fechaCreacion;
     private LocalDateTime ultimoLogin;
@@ -19,14 +19,14 @@ public class UsuarioResponse {
     public UsuarioResponse() {
     }
     
-    public UsuarioResponse(Long id, String username, String email, String nombre, 
-                          String apellido, boolean activo, LocalDateTime fechaCreacion,
+    public UsuarioResponse(Long id, String username, String email, String nombreCompleto, 
+                          String telefono, boolean activo, LocalDateTime fechaCreacion,
                           LocalDateTime ultimoLogin, List<String> roles) {
         this.id = id;
         this.username = username;
         this.email = email;
-        this.nombre = nombre;
-        this.apellido = apellido;
+        this.nombreCompleto = nombreCompleto;
+        this.telefono = telefono;
         this.activo = activo;
         this.fechaCreacion = fechaCreacion;
         this.ultimoLogin = ultimoLogin;
@@ -58,23 +58,23 @@ public class UsuarioResponse {
         this.email = email;
     }
     
-    public String getNombre() {
-        return nombre;
+    public String getNombreCompleto() {
+        return nombreCompleto;
     }
     
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public void setNombreCompleto(String nombreCompleto) {
+        this.nombreCompleto = nombreCompleto;
     }
     
-    public String getApellido() {
-        return apellido;
+    public String getTelefono() {
+        return telefono;
     }
     
-    public void setApellido(String apellido) {
-        this.apellido = apellido;
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
     
-    public boolean isActivo() {
+    public boolean getActivo() {
         return activo;
     }
     

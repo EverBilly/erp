@@ -29,12 +29,8 @@ public class Menu {
     
     private Integer orden = 0;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
-    private Menu parent;
-    
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
-    private Set<Menu> children = new HashSet<>();
+    @Column(name = "parent_id")
+    private Long parentId;
     
     private Boolean visible = true;
     
@@ -132,21 +128,13 @@ public class Menu {
     public void setOrden(Integer orden) {
         this.orden = orden;
     }
-    
-    public Menu getParent() {
-        return parent;
+
+    public Long getParentId() {
+        return parentId;
     }
-    
-    public void setParent(Menu parent) {
-        this.parent = parent;
-    }
-    
-    public Set<Menu> getChildren() {
-        return children;
-    }
-    
-    public void setChildren(Set<Menu> children) {
-        this.children = children;
+
+    public void setParentId(Long parentId) {
+        this.parentId = parentId;
     }
     
     public Boolean getVisible() {

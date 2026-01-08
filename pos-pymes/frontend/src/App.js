@@ -11,6 +11,7 @@ import Layout from './components/Layout';
 // Pages
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import UsuariosView from './pages/usuarios/UsuariosView';
 
 const theme = createTheme({
   palette: {
@@ -39,6 +40,11 @@ function App() {
               </PrivateRoute>
             } />
             <Route path="*" element={<Navigate to="/" />} />
+            <Route path="/usuarios/*" element={
+              <PrivateRoute>
+                <UsuariosView />
+              </PrivateRoute>
+            } />
           </Routes>
         </AuthProvider>
       </Router>

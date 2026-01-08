@@ -6,6 +6,7 @@ import com.pos.shared.security.JwtTokenProvider;
 import com.pos.shared.security.UserPrincipal;
 import com.pos.usuario.model.Usuario;
 import com.pos.usuario.repository.UsuarioRepository;
+import com.pos.rol.model.Rol;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -14,6 +15,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -47,8 +51,12 @@ public class AuthService {
         if (!passwordEncoder.matches(loginRequest.getPassword(), usuario.getPasswordHash())) {
             throw new RuntimeException("Credenciales inválidas");
         }
+
+        // 4. Actualizar último login
+        usuario.setUltimoLogin(LocalDateTime.now());
+        usuarioRepository.save(usuario);
         
-        // 4. Crear autenticación simple
+        // 5. Crear autenticación simple
         Authentication authentication = new UsernamePasswordAuthenticationToken(
             usuario.getUsername(),
             null  // credentials null porque ya verificamos la contraseña
@@ -56,12 +64,8 @@ public class AuthService {
         
         SecurityContextHolder.getContext().setAuthentication(authentication);
         
-        // 5. Generar token JWT
+        // 6. Generar token JWT
         String jwt = tokenProvider.generateTokenFromUsername(usuario.getUsername());
-        
-        // 6. Actualizar último login
-        usuario.setUltimoLogin(LocalDateTime.now());
-        usuarioRepository.save(usuario);
         
         // 7. Crear UserPrincipal para la respuesta
         UserPrincipal userPrincipal = UserPrincipal.create(usuario);
@@ -77,7 +81,7 @@ public class AuthService {
             userPrincipal.getAuthorities()
         );
     }
-    
+
     // public boolean validatePassword(String rawPassword, String encodedPassword) {
     //     return passwordEncoder.matches(rawPassword, encodedPassword);
     // }

@@ -3,6 +3,7 @@ package com.pos.usuario.model;
 import com.pos.rol.model.Rol;
 import com.pos.sesion_usuario.model.SesionUsuario;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -61,13 +62,13 @@ public class Usuario {
     @Column(columnDefinition = "jsonb")
     private Map<String, Object> metadata = new HashMap<>();
 
-    @JsonIgnore
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
         name = "usuario_rol",
         joinColumns = @JoinColumn(name = "usuario_id"),
         inverseJoinColumns = @JoinColumn(name = "rol_id")
     )
+    @JsonBackReference
     private Set<Rol> roles = new HashSet<>();
 
     @JsonIgnore

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
+@Transactional(readOnly = true)
 public class UsuarioService {
     
     private final UsuarioRepository usuarioRepository;
@@ -131,11 +132,8 @@ public class UsuarioService {
     }
     
     @Transactional(readOnly = true)
-    public List<Usuario> findAllByRole(String roleName) {
-        return usuarioRepository.findAll().stream()
-                .filter(u -> u.getRoles().stream()
-                        .anyMatch(r -> r.getNombre().equalsIgnoreCase(roleName)))
-                .toList();
+    public List<Usuario> findAllByRole(String rolName) {
+        return usuarioRepository.findAllByRole(rolName);
     }
     
     public boolean validatePassword(String rawPassword, String encodedPassword) {

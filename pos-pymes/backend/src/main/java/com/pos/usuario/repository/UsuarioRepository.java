@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.List;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -25,11 +26,16 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     Boolean existsByUsername(String username);
     
     Boolean existsByEmail(String email);
+
+    List<Usuario> findAll();
     
     // Método customizado para verificar email único excluyendo un id
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Usuario u WHERE u.email = :email AND u.id != :id")
     Boolean existsByEmailAndIdNot(@Param("email") String email, @Param("id") Long id);
     
+    @Query("SELECT u FROM Usuario u JOIN u.roles r WHERE r.nombre = :rolNombre")
+    List<Usuario> findAllByRole(@Param("rolNombre") String rolNombre);
+
     @Modifying
     @Transactional
     @Query("UPDATE Usuario u SET u.intentosLogin = u.intentosLogin + 1 WHERE u.id = :id")

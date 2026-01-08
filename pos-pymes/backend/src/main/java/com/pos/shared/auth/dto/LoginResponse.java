@@ -1,7 +1,9 @@
 package com.pos.shared.auth.dto;
 
+import com.pos.menu.dto.MenuDto;
 import org.springframework.security.core.GrantedAuthority;
 import java.util.Collection;
+import java.util.List;
 
 public class LoginResponse {
     
@@ -12,6 +14,7 @@ public class LoginResponse {
     private String email;
     private String nombreCompleto;
     private Collection<? extends GrantedAuthority> roles;
+    private List<MenuDto> menus;
 
     public LoginResponse() {}
     
@@ -82,5 +85,13 @@ public class LoginResponse {
 
     public void setRoles(Collection<? extends GrantedAuthority> roles) {
         this.roles = roles;
+    }
+
+    public List<MenuDto> getMenus() {
+        return menus;
+    }
+
+    public void setMenus(List<MenuDto> menus) {
+        this.menus = menus;
     }
 }

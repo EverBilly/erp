@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.HashMap;
 
-public class UserDTO {
+public class UserDto {
     private Long id;
     private String username;
     private String email;
@@ -18,7 +18,7 @@ public class UserDTO {
     private Map<String, Object> metadata;
     
     // Constructor
-    public UserDTO() {
+    public UserDto() {
     }
     
     // Getters y Setters

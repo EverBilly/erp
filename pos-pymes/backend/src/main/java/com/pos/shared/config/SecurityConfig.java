@@ -68,16 +68,13 @@ public class SecurityConfig {
 
                 // Rutas públicas
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/auth/**").permitAll()
                 .requestMatchers("/error").permitAll()
-                .requestMatchers("/api/public/**").permitAll()
-                .requestMatchers("/public/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/actuator/**").permitAll()
                 .requestMatchers("/api/test").permitAll()
                 
                 // Rutas protegidas
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/api/usuarios/**").authenticated()
                 .requestMatchers("/api/menus/**").authenticated()
                 .requestMatchers("/api/roles/**").authenticated()

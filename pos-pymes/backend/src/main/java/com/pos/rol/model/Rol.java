@@ -1,8 +1,10 @@
 package com.pos.rol.model;
 
-import com.pos.usuario.model.Usuario;  // <-- Import actualizado
-import com.pos.permiso.model.Permiso;  // <-- Import actualizado
-import com.pos.menu.model.Menu;      // <-- Import actualizado
+import com.pos.usuario.model.Usuario;
+import com.pos.permiso.model.Permiso;
+import com.pos.menu.model.Menu;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -32,11 +34,13 @@ public class Rol {
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion;
 
-    @ManyToMany(mappedBy = "roles", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "roles")
+    @JsonBackReference
     private Set<Usuario> usuarios = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "creado_por")
+    @JsonIgnore
     private Usuario creadoPor;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -45,6 +49,7 @@ public class Rol {
         joinColumns = @JoinColumn(name = "rol_id"),
         inverseJoinColumns = @JoinColumn(name = "permiso_id")
     )
+    @JsonIgnore
     private Set<Permiso> permisos = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -53,6 +58,7 @@ public class Rol {
         joinColumns = @JoinColumn(name = "rol_id"),
         inverseJoinColumns = @JoinColumn(name = "menu_id")
     )
+    @JsonIgnore
     private Set<Menu> menus = new HashSet<>();
 
     // Constructores

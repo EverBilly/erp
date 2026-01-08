@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   Container,
@@ -10,22 +11,17 @@ import {
   Button,
   Box
 } from '@mui/material';
-import {
-  PointOfSale as PosIcon,
-  Inventory as InventoryIcon,
-  People as PeopleIcon,
-  Assessment as ReportIcon
-} from '@mui/icons-material';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const modules = [
-    { title: 'Punto de Venta', icon: <PosIcon />, path: '/ventas', color: '#4caf50' },
-    { title: 'Productos', icon: <InventoryIcon />, path: '/productos', color: '#2196f3' },
-    { title: 'Clientes', icon: <PeopleIcon />, path: '/clientes', color: '#ff9800' },
-    { title: 'Reportes', icon: <ReportIcon />, path: '/reportes', color: '#9c27b0' },
-  ];
+  // Obtener menús permitidos
+  const menus = user?.menus || [];
+
+  const handleMenuClick = (ruta) => {
+    navigate(ruta);
+  };
 
   return (
     <Container maxWidth="lg">
@@ -37,10 +33,10 @@ const Dashboard = () => {
                 Sistema POS
               </Typography>
               <Typography variant="subtitle1" color="text.secondary">
-                Bienvenido, {user?.nombre} {user?.apellido}
+                Bienvenido, {user?.nombreCompleto}
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Rol: {user?.roles?.join(', ')}
+                Rol: {user?.roles?.map(r => r.authority).join(', ') || 'Sin roles'}
               </Typography>
             </Box>
             <Button variant="outlined" onClick={logout}>
@@ -54,65 +50,66 @@ const Dashboard = () => {
         </Typography>
 
         <Grid container spacing={3}>
-          {modules.map((module, index) => (
-            <Grid item xs={12} sm={6} md={3} key={index}>
-              <Card 
-                sx={{ 
-                  height: '100%',
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s',
-                  '&:hover': {
-                    transform: 'translateY(-4px)'
-                  }
-                }}
-                onClick={() => window.location.href = module.path}
-              >
-                <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                  <Box sx={{ 
-                    display: 'inline-flex',
-                    p: 2,
-                    borderRadius: '50%',
-                    bgcolor: module.color + '20',
-                    color: module.color,
-                    mb: 2
-                  }}>
-                    {React.cloneElement(module.icon, { sx: { fontSize: 40 } })}
-                  </Box>
-                  <Typography variant="h6" gutterBottom>
-                    {module.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Acceder al módulo
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
+          {menus
+            .filter(menu => menu.visible && menu.ruta) // Solo menús visibles con ruta
+            .sort((a, b) => a.orden - b.orden) // Ordenar por orden
+            .map((menu) => (
+              <Grid item xs={12} sm={6} md={3} key={menu.id}>
+                <Card 
+                  sx={{ 
+                    height: '100%',
+                    cursor: 'pointer',
+                    transition: 'transform 0.2s',
+                    '&:hover': { transform: 'translateY(-4px)' }
+                  }}
+                  onClick={() => handleMenuClick(menu.ruta)}
+                >
+                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                    <Box sx={{ 
+                      display: 'inline-flex',
+                      p: 2,
+                      borderRadius: '50%',
+                      bgcolor: '#1976d220',
+                      color: '#1976d2',
+                      mb: 2
+                    }}>
+                      {menu.icono ? (
+                        <Box component="span" sx={{ fontSize: 40 }}>
+                          {menu.icono}
+                        </Box>
+                      ) : (
+                        <Box component="span" sx={{ fontSize: 40 }}>📦</Box>
+                      )}
+                    </Box>
+                    <Typography variant="h6" gutterBottom>
+                      {menu.nombre}
+                    </Typography>
+                    {menu.badgeText && (
+                      <Box sx={{ 
+                        display: 'inline-block',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                        bgcolor: menu.badgeColor || '#f5f5f5',
+                        color: '#000',
+                        fontSize: '0.75rem'
+                      }}>
+                        {menu.badgeText}
+                      </Box>
+                    )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))}
         </Grid>
 
-        <Paper elevation={2} sx={{ p: 3, mt: 4 }}>
-          <Typography variant="h6" gutterBottom>
-            Permisos del usuario
-          </Typography>
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-            {user?.permisos?.map((permiso, index) => (
-              <Paper 
-                key={index}
-                variant="outlined" 
-                sx={{ 
-                  p: 1, 
-                  px: 2, 
-                  borderRadius: 2,
-                  bgcolor: '#f5f5f5'
-                }}
-              >
-                <Typography variant="body2">
-                  {permiso}
-                </Typography>
-              </Paper>
-            ))}
-          </Box>
-        </Paper>
+        {menus.length === 0 && (
+          <Paper elevation={2} sx={{ p: 3, mt: 4, textAlign: 'center' }}>
+            <Typography variant="body1" color="text.secondary">
+              No tienes acceso a ningún módulo. Contacta al administrador.
+            </Typography>
+          </Paper>
+        )}
       </Box>
     </Container>
   );

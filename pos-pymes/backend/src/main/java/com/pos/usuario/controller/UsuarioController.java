@@ -1,7 +1,9 @@
 package com.pos.usuario.controller;
 
 import com.pos.usuario.model.Usuario;
+import com.pos.rol.model.Rol;
 import com.pos.usuario.service.UsuarioService;
+import com.pos.usuario.dto.UsuarioResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -14,6 +16,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -25,27 +28,49 @@ public class UsuarioController {
     public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
+
+    // Método auxiliar para convertir Usuario a UsuarioResponse
+    private UsuarioResponse convertToDto(Usuario usuario) {
+        UsuarioResponse dto = new UsuarioResponse();
+        dto.setId(usuario.getId());
+        dto.setUsername(usuario.getUsername());
+        dto.setEmail(usuario.getEmail());
+        dto.setNombreCompleto(usuario.getNombreCompleto());
+        dto.setTelefono(usuario.getTelefono());
+        dto.setActivo(usuario.getActivo());
+        dto.setFechaCreacion(usuario.getFechaCreacion());
+        dto.setUltimoLogin(usuario.getUltimoLogin());
+        
+        // Extraer solo los nombres de los roles
+        List<String> nombresRoles = usuario.getRoles().stream()
+            .map(Rol::getNombre)
+            .collect(Collectors.toList());
+        dto.setRoles(nombresRoles);
+        
+        return dto;
+    }
     
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<Usuario>> getAllUsuarios() {
+    public ResponseEntity<List<UsuarioResponse>> getAllUsuarios() {
         List<Usuario> usuarios = usuarioService.findAll();
-        return ResponseEntity.ok(usuarios);
+        List<UsuarioResponse> dtos = usuarios.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
     
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or #id == principal.id")
     public ResponseEntity<?> getUsuarioById(@PathVariable Long id) {
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Usuario no encontrado"));
         }
-        return ResponseEntity.ok(usuarioOpt.get());
+        UsuarioResponse dto = convertToDto(usuarioOpt.get());
+        return ResponseEntity.ok(dto);
     }
     
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> createUsuario(@Valid @RequestBody Usuario usuario) {
         // Validar que el username no exista
         if (usuarioService.existsByUsername(usuario.getUsername())) {
@@ -60,11 +85,11 @@ public class UsuarioController {
         }
         
         Usuario nuevoUsuario = usuarioService.save(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
+        UsuarioResponse dto = convertToDto(nuevoUsuario);
+        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
     }
     
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN') or #id == principal.id")
     public ResponseEntity<?> updateUsuario(@PathVariable Long id, @Valid @RequestBody Usuario usuarioDetails) {
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
@@ -121,11 +146,11 @@ public class UsuarioController {
         }
         
         Usuario usuarioActualizado = usuarioService.save(usuario);
-        return ResponseEntity.ok(usuarioActualizado);
+        UsuarioResponse dto = convertToDto(usuarioActualizado);
+        return ResponseEntity.ok(dto);
     }
     
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> deleteUsuario(@PathVariable Long id) {
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
@@ -138,7 +163,6 @@ public class UsuarioController {
     }
     
     @PatchMapping("/{id}/activar")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> activarUsuario(@PathVariable Long id) {
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
@@ -152,11 +176,11 @@ public class UsuarioController {
         usuario.setIntentosLogin(0);
         
         Usuario usuarioActualizado = usuarioService.save(usuario);
-        return ResponseEntity.ok(usuarioActualizado);
+        UsuarioResponse dto = convertToDto(usuarioActualizado);
+        return ResponseEntity.ok(dto);
     }
     
     @PatchMapping("/{id}/desactivar")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<?> desactivarUsuario(@PathVariable Long id) {
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
@@ -168,23 +192,25 @@ public class UsuarioController {
         usuario.setActivo(false);
         
         Usuario usuarioActualizado = usuarioService.save(usuario);
-        return ResponseEntity.ok(usuarioActualizado);
+        UsuarioResponse dto = convertToDto(usuarioActualizado);
+        return ResponseEntity.ok(dto);
     }
     
     @GetMapping("/buscar")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<Usuario>> buscarUsuarios(@RequestParam(required = false) String nombre) {
+    public ResponseEntity<List<UsuarioResponse>> buscarUsuarios(@RequestParam(required = false) String nombre) {
         List<Usuario> usuarios;
         if (nombre != null && !nombre.trim().isEmpty()) {
             usuarios = usuarioService.findByNombreContainingIgnoreCase(nombre);
         } else {
             usuarios = usuarioService.findAll();
         }
-        return ResponseEntity.ok(usuarios);
+        List<UsuarioResponse> dtos = usuarios.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
     
     @GetMapping("/estadisticas")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     public ResponseEntity<Map<String, Object>> getEstadisticas() {
         long totalUsuarios = usuarioService.findAll().size();
         long usuariosActivos = usuarioService.countByActivoTrue();
@@ -198,17 +224,21 @@ public class UsuarioController {
     }
     
     @GetMapping("/activos")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<Usuario>> getUsuariosActivos() {
+    public ResponseEntity<List<UsuarioResponse>> getUsuariosActivos() {
         List<Usuario> usuariosActivos = usuarioService.findAllByActivoTrue();
-        return ResponseEntity.ok(usuariosActivos);
+        List<UsuarioResponse> dtos = usuariosActivos.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
     
     @GetMapping("/rol/{rolNombre}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
-    public ResponseEntity<List<Usuario>> getUsuariosPorRol(@PathVariable String rolNombre) {
+    public ResponseEntity<List<UsuarioResponse>> getUsuariosPorRol(@PathVariable String rolNombre) {
         List<Usuario> usuarios = usuarioService.findAllByRole(rolNombre);
-        return ResponseEntity.ok(usuarios);
+        List<UsuarioResponse> dtos = usuarios.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
     
     @GetMapping("/check-username/{username}")

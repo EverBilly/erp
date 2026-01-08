@@ -9,12 +9,26 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const storedUser = authService.getCurrentUser();
-    if (storedUser) {
-      setUser(storedUser);
+  // Funcion para cargar el usuario actual desde el token
+  const loadCurrentUser = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    try {
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
+    } catch (error) { 
+      console.error('Error al cargar usuario actual:', error);
+      authService.logout(); // Limpia si el token es inválido
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCurrentUser();
   }, []);
 
   const login = async (username, password) => {
@@ -45,7 +59,9 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={value}>
-      {children}
+      {!loading && children}
     </AuthContext.Provider>
   );
 };
+
+export default AuthContext;

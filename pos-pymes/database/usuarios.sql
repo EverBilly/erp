@@ -296,7 +296,7 @@ INSERT INTO usuarios (username, email, password_hash, activo, nombre_completo, t
 ('supervisor2', 'supervisor2@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Laura Gómez Méndez', '+525566667777', 'es', '{"departamento": "calidad", "puesto": "supervisor"}'),
 
 -- Usuarios regulares
-('empleado1', 'empleado1@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Pedro Hernández Luna', '+525577778888', 'es', '{"departamento": "ventas", "puesto": "vendedor"}'),
+('empleado1', 'empleado1@empresa.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Pedro Hernández Luna', '+525577778888', 'es', '{"departamento": "ventas", "puesto": "vendedor"}'),
 ('empleado2', 'empleado2@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Sofía Vargas Ruíz', '+525588889999', 'es', '{"departamento": "marketing", "puesto": "diseñador"}'),
 ('empleado3', 'empleado3@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Miguel Torres Ortega', '+525599990000', 'es', '{"departamento": "producción", "puesto": "operador"}'),
 ('empleado4', 'empleado4@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Gabriela Reyes Soto', '+525500001111', 'es', '{"departamento": "calidad", "puesto": "inspector"}'),
@@ -315,21 +315,24 @@ INSERT INTO usuarios (username, email, password_hash, activo, nombre_completo, t
 
 -- Insertar rol super administrador
 INSERT INTO roles (nombre, descripcion, nivel_prioridad, es_sistema) 
-VALUES ('Super Administrador', 'Acceso completo a todo el sistema', 1000, true);
+VALUES ('SUPER_ADMIN', 'Acceso completo a todo el sistema', 1000, true);
 
 -- Insertar rol administrador
 INSERT INTO roles (nombre, descripcion, nivel_prioridad, es_sistema) 
-VALUES ('Administrador', 'Administra usuarios y permisos', 100, true);
-
+VALUES ('ADMIN', 'Administra usuarios y permisos', 100, true);
 -- Insertar rol usuario básico
 INSERT INTO roles (nombre, descripcion, nivel_prioridad, es_sistema) 
-VALUES ('Usuario', 'Usuario básico del sistema', 10, true);
+VALUES ('USER', 'Usuario básico del sistema', 10, true);
+
 
 -- ============================================
 -- 3. Asignar rol Super Administrador al superadmin
 -- ============================================
 INSERT INTO usuario_rol (usuario_id, rol_id, asignado_por)
-VALUES (1, 1, 1)
+VALUES
+(1, 1, 1),
+(2, 2, 1),
+(8, 3, 1)
 ON CONFLICT (usuario_id, rol_id) DO NOTHING;
 
 -- Insertar menús básicos del sistema
@@ -348,6 +351,11 @@ INSERT INTO menus (nombre, ruta, icono, orden, parent_id, descripcion) VALUES
 ('Mis Sesiones', '/perfil/sesiones', 'monitor', 2, 10, 'Sesiones activas'),
 ('Mi Actividad', '/perfil/actividad', 'list', 3, 10, 'Historial de actividad');
 
+-- INSERT INTO menus (id, nombre, ruta, icono, orden, visible) VALUES
+-- (1, 'Usuarios', '/usuarios', '👤', 10, true),
+-- (2, 'Productos', '/productos', '📦', 20, true),
+-- (3, 'Ventas', '/ventas', '💰', 30, true),
+-- (4, 'Reportes', '/reportes', '📊', 40, true);
 -- ============================================
 -- 4. Menús esenciales
 -- ============================================
@@ -361,6 +369,18 @@ INSERT INTO menus (nombre, ruta, icono, orden, parent_id, descripcion) VALUES
 -- (6, 'Menús', '/admin/menus', 'menu', 4, 2, true, true, 'MenusPage'),
 -- (7, 'Mi Perfil', '/perfil', 'user', 2, NULL, true, false, 'PerfilPage')
 -- ON CONFLICT (ruta) DO NOTHING;
+
+-- Super Admin (rol_id=1) puede ver todos los menús
+-- Admin (rol_id=2) puede ver Productos, Ventas, Reportes
+INSERT INTO rol_menu (rol_id, menu_id, activo, puede_ver) 
+VALUES 
+(1, 1, true, true),
+(1, 2, true, true),
+(1, 3, true, true),
+(1, 4, true, true),
+(2, 2, true, true),
+(2, 3, true, true),
+(2, 4, true, true);
 
 
 -- Insertar permisos básicos del sistema
