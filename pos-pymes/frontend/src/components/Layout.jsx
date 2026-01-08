@@ -15,7 +15,9 @@ import {
   Avatar,
   Menu,
   MenuItem,
-  Divider
+  Divider,
+  Collapse,
+  ListItemButton
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -23,18 +25,110 @@ import {
   PointOfSale as PosIcon,
   Inventory as InventoryIcon,
   People as PeopleIcon,
-  Assessment as ReportIcon,
+  Assessment as AssessmentIcon,
   Settings as SettingsIcon,
   Logout as LogoutIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  Security as SecurityIcon,
+  Lock as LockIcon,
+  Key as KeyIcon,
+  Monitor as MonitorIcon,
+  Description as DescriptionIcon,
+  ExpandLess,
+  ExpandMore,
 } from '@mui/icons-material';
 
 const drawerWidth = 240;
 
+// --- COMPONENTE RECURSIVO PARA SUBMENÚS ---
+const SidebarItem = ({ item, depth = 0, onNavigate, currentPath }) => {
+  const [open, setOpen] = useState(false);
+  const isLeaf = !item.children || item.children.length === 0;
+
+  // Mapeo de nombres de BD a Componentes de Iconos MUI
+  const getIcon = (iconName) => {
+    const iconMap = {
+        'home': <DashboardIcon />,
+        'dashboard': <DashboardIcon />,
+        'settings': <SettingsIcon />,
+        'sliders': <SettingsIcon />,
+        'users': <PeopleIcon />,
+        'shield': <SecurityIcon />,
+        'key': <KeyIcon />,
+        'menu': <MenuIcon />,
+        'activity': <AssessmentIcon />,
+        'bar-chart': <AssessmentIcon />,
+        'user': <PersonIcon />,
+        'lock': <LockIcon />,
+        'monitor': <MonitorIcon />,
+        'list': <DescriptionIcon />,
+        'default': <DashboardIcon />
+    };
+    // Si el icono no existe, muestra el default
+    return iconMap[iconName] || iconMap['default'];
+  };
+
+  const handleClick = () => {
+    if (isLeaf) {
+      onNavigate(item.ruta);
+    } else {
+      setOpen(!open);
+    }
+  };
+
+  // Estilo visual para item activo
+  const isSelected = currentPath === item.ruta;
+  
+  // Indentación para submenús
+  const paddingLeft = 16 + (depth * 16);
+
+  return (
+    <>
+      <ListItem disablePadding>
+        <ListItemButton 
+          onClick={handleClick}
+          sx={{ 
+            pl: `${paddingLeft}px`,
+            backgroundColor: isSelected ? 'primary.main' : 'transparent',
+            color: isSelected ? 'white' : 'inherit',
+            '&:hover': {
+              backgroundColor: isSelected ? 'primary.dark' : 'rgba(0, 0, 0, 0.04)'
+            }
+          }}
+        >
+          <ListItemIcon sx={{ color: isSelected ? 'white' : 'inherit' }}>
+            {getIcon(item.icono)}
+          </ListItemIcon>
+          <ListItemText primary={item.nombre} sx={{ whiteSpace: 'normal' }} />
+          {!isLeaf ? (open ? <ExpandLess /> : <ExpandMore />) : null}
+        </ListItemButton>
+      </ListItem>
+      
+      {/* Renderizar hijos recursivamente si existen */}
+      {!isLeaf && (
+        <Collapse in={open} timeout="auto" unmountOnExit>
+          <List disablePadding>
+            {item.children.map((child) => (
+              <SidebarItem 
+                key={child.id} 
+                item={child} 
+                depth={depth + 1} 
+                onNavigate={onNavigate}
+                currentPath={currentPath}
+              />
+            ))}
+          </List>
+        </Collapse>
+      )}
+    </>
+  );
+};
+// -------------------------------------------------
+
 const Layout = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const { user, logout } = useAuth();
+  const { user, logout, menuTree } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -56,49 +150,30 @@ const Layout = ({ children }) => {
     handleMenuClose();
   };
 
-  const menuItems = [
-    { text: 'Dashboard', icon: <DashboardIcon />, path: '/' },
-    { text: 'Punto de Venta', icon: <PosIcon />, path: '/ventas' },
-    { text: 'Productos', icon: <InventoryIcon />, path: '/productos' },
-    { text: 'Clientes', icon: <PeopleIcon />, path: '/clientes' },
-    { text: 'Reportes', icon: <ReportIcon />, path: '/reportes' },
-    { text: 'Configuración', icon: <SettingsIcon />, path: '/configuracion' },
-  ];
-
+  // Contenido del Drawer (ahora dinámico desde el Contexto)
   const drawer = (
     <div>
       <Toolbar>
-        <Typography variant="h6" noWrap>
+        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
           POS System
         </Typography>
       </Toolbar>
       <Divider />
       <List>
-        {menuItems.map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            onClick={() => navigate(item.path)}
-            selected={location.pathname === item.path}
-            sx={{
-              '&.Mui-selected': {
-                backgroundColor: 'primary.main',
-                color: 'white',
-                '&:hover': {
-                  backgroundColor: 'primary.dark',
-                },
-                '& .MuiListItemIcon-root': {
-                  color: 'white',
-                },
-              },
-            }}
-          >
-            <ListItemIcon>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText primary={item.text} />
+        {menuTree && menuTree.length > 0 ? (
+          menuTree.map((item) => (
+            <SidebarItem 
+              key={item.id} 
+              item={item} 
+              onNavigate={(path) => navigate(path)}
+              currentPath={location.pathname}
+            />
+          ))
+        ) : (
+          <ListItem>
+            <ListItemText primary="Cargando menú..." />
           </ListItem>
-        ))}
+        )}
       </List>
     </div>
   );
@@ -123,12 +198,12 @@ const Layout = ({ children }) => {
             <MenuIcon />
           </IconButton>
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {menuItems.find(item => item.path === location.pathname)?.text || 'Dashboard'}
+            {user?.nombreCompleto || 'Dashboard'}
           </Typography>
           
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
-              {user?.nombre} {user?.apellido}
+              {user?.nombreCompleto}
             </Typography>
             <IconButton
               size="large"

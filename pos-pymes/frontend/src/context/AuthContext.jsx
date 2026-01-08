@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import authService from '../services/authService';
+import { buildMenuTree } from '../utils/menuUtils';
 
 const AuthContext = createContext({});
 
@@ -8,6 +9,7 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [menuTree, setMenuTree] = useState([]);
 
   // Funcion para cargar el usuario actual desde el token
   const loadCurrentUser = async () => {
@@ -19,6 +21,11 @@ export const AuthProvider = ({ children }) => {
     try {
       const userData = await authService.getCurrentUser();
       setUser(userData);
+
+      // Cargar y construir el menú
+      const menusFlat = await authService.getMenu();
+      setMenuTree(buildMenuTree(menusFlat));
+
     } catch (error) { 
       console.error('Error al cargar usuario actual:', error);
       authService.logout(); // Limpia si el token es inválido
@@ -33,8 +40,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     try {
+      // 1. Login Normal
       const userData = await authService.login(username, password);
       setUser(userData);
+
+      // 2. Cargar y construir el menú
+      const menusFlat = await authService.getMenu();
+      setMenuTree(buildMenuTree(menusFlat));
+
       return { success: true };
     } catch (error) {
       return { 
@@ -47,6 +60,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     authService.logout();
     setUser(null);
+    setMenuTree([]); // Limpiar menú al cerrar sesión
   };
 
   const value = {
@@ -54,7 +68,8 @@ export const AuthProvider = ({ children }) => {
     login,
     logout,
     loading,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    menuTree
   };
 
   return (

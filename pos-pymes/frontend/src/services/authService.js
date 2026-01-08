@@ -21,6 +21,16 @@ const authService = {
     return data;
   },
 
+  async getMenu() {
+    try {
+      const response = await api.get('/usuarios/menu');
+      return response.data;
+    } catch (error) {
+      console.error('Error cargando menu:', error);
+      throw error;
+    }
+  },
+
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
