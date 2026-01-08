@@ -2,116 +2,120 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Container,
   Paper,
   Typography,
   Grid,
-  Card,
-  CardContent,
-  Button,
-  Box
+  Box,
+  LinearProgress,
+  Chip,
+  Button
 } from '@mui/material';
+import {
+  ShoppingBag as SalesIcon,
+  TrendingUp as GrowthIcon,
+  Warning as AlertIcon,
+  People as UsersIcon
+} from '@mui/icons-material';
 
 const Dashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Obtener menús permitidos
-  const menus = user?.menus || [];
-
-  const handleMenuClick = (ruta) => {
-    navigate(ruta);
-  };
+  // Datos de ejemplo (estos deberían venir del backend en el futuro)
+  const kpis = [
+    { title: 'Ventas Hoy', value: '$12,450', progress: 75, color: 'success', icon: <SalesIcon /> },
+    { title: 'Pedidos Pendientes', value: '24', progress: 30, color: 'warning', icon: <AlertIcon /> },
+    { title: 'Usuarios Activos', value: '12', progress: 45, color: 'info', icon: <UsersIcon /> },
+    { title: 'Crecimiento Mensual', value: '+15%', progress: 90, color: 'primary', icon: <GrowthIcon /> },
+  ];
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="h4" gutterBottom>
-                Sistema POS
+    <Box sx={{ flexGrow: 1 }}>
+      
+      {/* Cabecera de Bienvenida */}
+      <Paper elevation={2} sx={{ p: 3, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Box>
+          <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+            Panel de Control
+          </Typography>
+          <Typography variant="h6" color="text.secondary">
+            Bienvenido, {user?.nombreCompleto || 'Usuario'}
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+            Rol: <strong>{user?.roles?.[0]?.authority || 'Sistema'}</strong>
+          </Typography>
+        </Box>
+        <Button variant="outlined" color="error" onClick={() => { logout(); navigate('/login'); }}>
+          Cerrar Sesión
+        </Button>
+      </Paper>
+
+      {/* Tarjetas KPI */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        {kpis.map((kpi, index) => (
+          <Grid item xs={12} sm={6} md={3} key={index}>
+            <Paper
+              sx={{
+                p: 2,
+                display: 'flex',
+                flexDirection: 'column',
+                height: 140,
+                justifyContent: 'center',
+                bgcolor: 'background.paper',
+                boxShadow: 3,
+                '&:hover': { boxShadow: 6, transform: 'translateY(-4px)' },
+                transition: 'all 0.3s',
+                borderRadius: 2
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', mb: 1 }}>
+                <Typography variant="h6" color="textSecondary" sx={{ fontWeight: 500 }}>
+                  {kpi.title}
+                </Typography>
+                <Box sx={{ color: `${kpi.color}.main`, fontSize: 32 }}>
+                  {kpi.icon}
+                </Box>
+              </Box>
+              <Typography variant="h4" component="div" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
+                {kpi.value}
               </Typography>
-              <Typography variant="subtitle1" color="text.secondary">
-                Bienvenido, {user?.nombreCompleto}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Rol: {user?.roles?.map(r => r.authority).join(', ') || 'Sin roles'}
-              </Typography>
+              <Box sx={{ mt: 1, width: '100%' }}>
+                <LinearProgress variant="determinate" value={kpi.progress} color={kpi.color} />
+              </Box>
+            </Paper>
+          </Grid>
+        ))}
+      </Grid>
+
+      {/* Contenido Inferior */}
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={8}>
+          <Paper sx={{ p: 2, minHeight: 300 }}>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+              Actividad Reciente
+            </Typography>
+            <Box sx={{ height: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'text.secondary', border: '1px dashed #ccc', borderRadius: 1 }}>
+              <Typography>Gráfico de ventas (Próximamente)</Typography>
             </Box>
-            <Button variant="outlined" onClick={logout}>
-              Cerrar Sesión
-            </Button>
-          </Box>
-        </Paper>
-
-        <Typography variant="h5" gutterBottom sx={{ mb: 3 }}>
-          Módulos del Sistema
-        </Typography>
-
-        <Grid container spacing={3}>
-          {menus
-            .filter(menu => menu.visible && menu.ruta) // Solo menús visibles con ruta
-            .sort((a, b) => a.orden - b.orden) // Ordenar por orden
-            .map((menu) => (
-              <Grid item xs={12} sm={6} md={3} key={menu.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    cursor: 'pointer',
-                    transition: 'transform 0.2s',
-                    '&:hover': { transform: 'translateY(-4px)' }
-                  }}
-                  onClick={() => handleMenuClick(menu.ruta)}
-                >
-                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                    <Box sx={{ 
-                      display: 'inline-flex',
-                      p: 2,
-                      borderRadius: '50%',
-                      bgcolor: '#1976d220',
-                      color: '#1976d2',
-                      mb: 2
-                    }}>
-                      {menu.icono ? (
-                        <Box component="span" sx={{ fontSize: 40 }}>
-                          {menu.icono}
-                        </Box>
-                      ) : (
-                        <Box component="span" sx={{ fontSize: 40 }}>📦</Box>
-                      )}
-                    </Box>
-                    <Typography variant="h6" gutterBottom>
-                      {menu.nombre}
-                    </Typography>
-                    {menu.badgeText && (
-                      <Box sx={{ 
-                        display: 'inline-block',
-                        px: 1,
-                        py: 0.5,
-                        borderRadius: 1,
-                        bgcolor: menu.badgeColor || '#f5f5f5',
-                        color: '#000',
-                        fontSize: '0.75rem'
-                      }}>
-                        {menu.badgeText}
-                      </Box>
-                    )}
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
+          </Paper>
         </Grid>
 
-        {menus.length === 0 && (
-          <Paper elevation={2} sx={{ p: 3, mt: 4, textAlign: 'center' }}>
-            <Typography variant="body1" color="text.secondary">
-              No tienes acceso a ningún módulo. Contacta al administrador.
+        <Grid item xs={12} md={4}>
+          <Paper sx={{ p: 2, minHeight: 300 }}>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+              Alertas del Sistema
             </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Chip label="Stock bajo: Arroz" color="error" variant="outlined" size="small" sx={{ justifyContent: 'flex-start' }} />
+              <Chip label="CPU Servidor: 95%" color="warning" variant="outlined" size="small" sx={{ justifyContent: 'flex-start' }} />
+              <Chip label="Backup Completado" color="success" variant="outlined" size="small" sx={{ justifyContent: 'flex-start' }} />
+              <Chip label="Nuevo Usuario: Juan" color="info" variant="outlined" size="small" sx={{ justifyContent: 'flex-start' }} />
+            </Box>
           </Paper>
-        )}
-      </Box>
-    </Container>
+        </Grid>
+      </Grid>
+
+    </Box>
   );
 };
 

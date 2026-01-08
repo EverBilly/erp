@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import {
   AppBar,
   Box,
@@ -17,7 +18,8 @@ import {
   MenuItem,
   Divider,
   Collapse,
-  ListItemButton
+  ListItemButton,
+  CircularProgress
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -128,7 +130,8 @@ const SidebarItem = ({ item, depth = 0, onNavigate, currentPath }) => {
 const Layout = ({ children }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const { user, logout, menuTree } = useAuth();
+  const { user, logout, menuTree, loading } = useAuth();
+  const [desktopOpen, setDesktopOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -143,6 +146,10 @@ const Layout = ({ children }) => {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const handleDesktopDrawerToggle = () => {
+    setDesktopOpen(!desktopOpen);
+  }
 
   const handleLogout = () => {
     logout();
@@ -160,7 +167,15 @@ const Layout = ({ children }) => {
       </Toolbar>
       <Divider />
       <List>
-        {menuTree && menuTree.length > 0 ? (
+        {/* ESTADO 1: ESTÁ CARGANDO (LOGIN EN PROCESO) */}
+        {loading ? (
+          <ListItem>
+            <CircularProgress size={20} sx={{ mr: 2 }} /> {/* Icono de carga opcional */}
+            <ListItemText primary="Cargando..." />
+          </ListItem>
+        ) : menuTree.length > 0 ? (
+
+          /* ESTADO 2: MENÚ CARGADO EXITOSAMENTE */
           menuTree.map((item) => (
             <SidebarItem 
               key={item.id} 
@@ -170,8 +185,12 @@ const Layout = ({ children }) => {
             />
           ))
         ) : (
+          /* ESTADO 3: SIN MENÚS (ESTADO VACÍO) */
           <ListItem>
-            <ListItemText primary="Cargando menú..." />
+            <ListItemText 
+            primary="Sin acceso a módulos"
+            secondary="Contacte al administrador para asignarle permisos." 
+            />
           </ListItem>
         )}
       </List>
@@ -183,8 +202,9 @@ const Layout = ({ children }) => {
       <AppBar
         position="fixed"
         sx={{
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
-          ml: { sm: `${drawerWidth}px` },
+          width: { sm: `calc(100% - ${desktopOpen ? drawerWidth : 0}px)` },
+          ml: { sm: desktopOpen ? `${drawerWidth}px` : 0 },
+          transition: 'width 0.3s, margin-left 0.3s'
         }}
       >
         <Toolbar>
@@ -197,6 +217,17 @@ const Layout = ({ children }) => {
           >
             <MenuIcon />
           </IconButton>
+          
+          <IconButton
+            color="inherit"
+            aria-label="toggle sidebar"
+            edge="start"
+            onClick={handleDesktopDrawerToggle}
+            sx={{ mr: 1}}
+          >
+            {desktopOpen ? <MenuIcon/> : <ChevronLeftIcon />}
+          </IconButton>
+
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
             {user?.nombreCompleto || 'Dashboard'}
           </Typography>
@@ -239,7 +270,7 @@ const Layout = ({ children }) => {
       
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{ display: { sm: desktopOpen ? 'block' : 'none' }, width: drawerWidth, flexShrink: { sm: 0 }, transition: 'all 0.3s ease' }}
       >
         <Drawer
           variant="temporary"
