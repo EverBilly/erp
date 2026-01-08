@@ -2,6 +2,7 @@ package com.pos.usuario.model;
 
 import com.pos.rol.model.Rol;
 import com.pos.sesion_usuario.model.SesionUsuario;
+import com.pos.tenant.model.Tenant;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
@@ -20,6 +21,10 @@ public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
 
     @Column(unique = true, nullable = false, length = 50)
     private String username;

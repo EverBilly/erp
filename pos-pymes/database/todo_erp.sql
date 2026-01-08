@@ -46,9 +46,9 @@ CREATE TABLE sucursales (
     telefono VARCHAR(20),
     email VARCHAR(100),
     ciudad VARCHAR(100),
-    pais VARCHAR(100) DEFAULT 'México',
-    moneda_base VARCHAR(3) DEFAULT 'MXN',
-    timezone VARCHAR(50) DEFAULT 'America/Mexico_City',
+    pais VARCHAR(100) DEFAULT 'Guatemala',
+    moneda_base VARCHAR(3) DEFAULT 'Q',
+    timezone VARCHAR(50) DEFAULT 'America/Guatemala',
     activa BOOLEAN DEFAULT true,
     es_principal BOOLEAN DEFAULT false,
     configuracion_pos JSONB, -- Configuración específica del POS
@@ -56,7 +56,8 @@ CREATE TABLE sucursales (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER REFERENCES usuarios(id),
-    updated_by INTEGER REFERENCES usuarios(id)
+    updated_by INTEGER REFERENCES usuarios(id),
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 2. ALMACENES / BODEGAS
@@ -94,7 +95,8 @@ CREATE TABLE categorias_productos (
     metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INTEGER REFERENCES usuarios(id)
+    created_by INTEGER REFERENCES usuarios(id),
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 4. PRODUCTOS
@@ -143,7 +145,8 @@ CREATE TABLE variantes_producto (
     imagen_url TEXT,
     metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 6. PRECIOS DE PRODUCTOS
@@ -163,7 +166,8 @@ CREATE TABLE precios_producto (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     created_by INTEGER REFERENCES usuarios(id),
-    UNIQUE(producto_id, variante_id, tipo_precio)
+    UNIQUE(producto_id, variante_id, tipo_precio),
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 7. INVENTARIO POR ALMACÉN
@@ -291,7 +295,8 @@ CREATE TABLE ventas (
     observaciones TEXT,
     metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 12. DETALLE DE VENTAS
@@ -312,7 +317,8 @@ CREATE TABLE ventas_detalle (
     almacen_id INTEGER REFERENCES almacenes(id),
     lote_numero VARCHAR(100),
     seriales TEXT[],
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 13. PAGOS DE VENTAS
@@ -327,7 +333,8 @@ CREATE TABLE ventas_pagos (
     estado VARCHAR(50) DEFAULT 'completado',
     observaciones TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INTEGER REFERENCES usuarios(id)
+    created_by INTEGER REFERENCES usuarios(id),
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 14. IMPUESTOS
@@ -370,7 +377,8 @@ CREATE TABLE descuentos_promociones (
     metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INTEGER REFERENCES usuarios(id)
+    created_by INTEGER REFERENCES usuarios(id),
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- ============================================
@@ -418,7 +426,8 @@ CREATE TABLE ordenes_compra (
     fecha_aprobacion TIMESTAMP,
     metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 18. DETALLE ÓRDENES DE COMPRA
@@ -433,7 +442,8 @@ CREATE TABLE ordenes_compra_detalle (
     total_linea DECIMAL(15,2) NOT NULL,
     cantidad_recibida INTEGER DEFAULT 0,
     almacen_destino_id INTEGER REFERENCES almacenes(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- ============================================
@@ -455,7 +465,8 @@ CREATE TABLE cajas (
     metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(sucursal_id, codigo)
+    UNIQUE(sucursal_id, codigo),
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 20. APERTURAS DE CAJA
@@ -475,7 +486,8 @@ CREATE TABLE aperturas_caja (
     observaciones TEXT,
     estado VARCHAR(50) DEFAULT 'abierta', -- abierta, cerrada
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 21. MOVIMIENTOS DE CAJA
@@ -490,7 +502,8 @@ CREATE TABLE movimientos_caja (
     referencia_tipo VARCHAR(50),
     observaciones TEXT,
     creado_por INTEGER REFERENCES usuarios(id),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- ============================================
@@ -514,7 +527,8 @@ CREATE TABLE cuentas_contables (
     metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    created_by INTEGER REFERENCES usuarios(id)
+    created_by INTEGER REFERENCES usuarios(id),
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 23. ASIENTOS CONTABLES
@@ -534,7 +548,8 @@ CREATE TABLE asientos_contables (
     fecha_publicacion TIMESTAMP,
     metadata JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 24. DETALLE ASIENTOS CONTABLES
@@ -547,7 +562,8 @@ CREATE TABLE asientos_contables_detalle (
     concepto TEXT,
     referencia_tipo VARCHAR(50),
     referencia_id BIGINT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- ============================================
@@ -586,7 +602,8 @@ CREATE TABLE dashboards (
     es_default BOOLEAN DEFAULT false,
     activo BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- ============================================
@@ -606,7 +623,8 @@ CREATE TABLE notificaciones (
     prioridad INTEGER DEFAULT 0,
     expira_en TIMESTAMP,
     metadata JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id)
 );
 
 -- 28. PLANTILLAS DE NOTIFICACIÓN
@@ -967,20 +985,19 @@ $$;
 -- ============================================
 
 -- Insertar sucursal principal
-INSERT INTO sucursales (codigo, nombre, direccion, ciudad, es_principal) 
-VALUES ('SUC001', 'Sucursal Principal', 'Av. Principal 123', 'Ciudad de México', true);
+INSERT INTO sucursales (codigo, nombre, direccion, ciudad, es_principal, tenant_id) 
+VALUES ('SUC001', 'Sucursal Principal', 'Av. Principal 123', 'Ciudad de Guetemala', true, 1);
 
 -- Insertar almacén principal
 INSERT INTO almacenes (sucursal_id, codigo, nombre, tipo, es_default)
 VALUES (1, 'ALM001', 'Almacén Principal', 'principal', true);
 
 -- Insertar categorías de ejemplo
-INSERT INTO categorias_productos (codigo, nombre) VALUES
-('CAT001', 'Electrónica'),
-('CAT002', 'Ropa'),
-('CAT003', 'Alimentos'),
-('CAT004', 'Hogar');
-
+INSERT INTO categorias_productos (codigo, nombre, tenant_id) VALUES
+('CAT001', 'Electrónica', 1),
+('CAT002', 'Ropa', 1),
+('CAT003', 'Alimentos', 1),
+('CAT004', 'Hogar', 1);
 -- Insertar productos de ejemplo
 INSERT INTO productos (codigo_interno, nombre, descripcion, categoria_id, precio_base) VALUES
 ('PROD001', 'Laptop HP', 'Laptop HP 15.6 pulgadas', 1, 15000.00),

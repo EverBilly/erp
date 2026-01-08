@@ -2,6 +2,19 @@
 -- SISTEMA COMPLETO DE USUARIOS, ROLES, PERMISOS Y MENÚS
 -- ============================================
 
+-- 1. Crear tabla de Tenants (Inquilinos/Empresas)
+CREATE TABLE tenants (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    identificador VARCHAR(50) UNIQUE NOT NULL, -- ej: 'restaurante-mario', 'colegio-san-judas'
+    plan VARCHAR(50) DEFAULT 'free', -- free, pro, enterprise
+    activo BOOLEAN DEFAULT true,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    configuracion JSONB DEFAULT '{}',
+    logo_url TEXT
+);
+
+
 -- 1. TABLA DE USUARIOS
 CREATE TABLE  usuarios (
     id SERIAL PRIMARY KEY,
@@ -18,7 +31,8 @@ CREATE TABLE  usuarios (
     avatar_url TEXT,
     timezone VARCHAR(50) DEFAULT 'UTC',
     idioma VARCHAR(10) DEFAULT 'es',
-    metadata JSONB
+    metadata JSONB,
+    tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE
 );
 
 -- 2. TABLA DE ROLES
@@ -30,7 +44,8 @@ CREATE TABLE  roles (
     activo BOOLEAN DEFAULT true,
     es_sistema BOOLEAN DEFAULT false,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    creado_por INTEGER REFERENCES usuarios(id)
+    creado_por INTEGER REFERENCES usuarios(id),
+    tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE
 );
 
 -- 3. TABLA DE MENÚS
@@ -51,7 +66,8 @@ CREATE TABLE  menus (
     badge_text VARCHAR(20),
     badge_color VARCHAR(20),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tenant_id INTEGER REFERENCES tenants(id) ON DELETE CASCADE
 );
 
 -- 4. TABLA DE PERMISOS
@@ -278,52 +294,50 @@ CREATE INDEX idx_config_categoria ON configuracion_sistema(categoria);
 -- DATOS INICIALES ESENCIALES
 -- ============================================
 
+-- 2. Insertar un Tenant por defecto para tus datos actuales
+INSERT INTO tenants (nombre, identificador, plan) 
+VALUES ('Sistema Principal', 'tenant-default', 'enterprise');
+
 -- Password: password123 -> bcrypt hash
-INSERT INTO usuarios (username, email, password_hash, activo, nombre_completo, telefono, idioma, metadata) VALUES
+INSERT INTO usuarios (username, email, password_hash, activo, nombre_completo, telefono, idioma, metadata, tenant_id) VALUES
 -- Super Administrador
-('superadmin', 'superadmin@sistema.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Super Administrador Principal', '+525512345678', 'es', '{"notificaciones": true, "tema": "oscuro"}'),
+('superadmin', 'superadmin@sistema.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Super Administrador Principal', '+525512345678', 'es', '{"notificaciones": true, "tema": "oscuro"}', 1),
 
 -- Administradores
-('admin', 'admin1@sistema.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Ana López Rodríguez', '+525511112222', 'es', '{"notificaciones": true, "tema": "claro"}'),
-('admin2', 'admin2@sistema.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Carlos Martínez García', '+525522223333', 'es', '{"notificaciones": false, "tema": "claro"}'),
+('admin', 'admin1@sistema.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Ana López Rodríguez', '+525511112222', 'es', '{"notificaciones": true, "tema": "claro"}', 1),
+('admin2', 'admin2@sistema.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Carlos Martínez García', '+525522223333', 'es', '{"notificaciones": false, "tema": "claro"}', 1),
 
 -- Usuarios con diferentes roles
-('gerente1', 'gerente1@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Roberto Sánchez Pérez', '+525533334444', 'es', '{"departamento": "ventas", "puesto": "gerente"}'),
-('gerente2', 'gerente2@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'María Fernández Castro', '+525544445555', 'es', '{"departamento": "marketing", "puesto": "gerente"}'),
+('gerente1', 'gerente1@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Roberto Sánchez Pérez', '+525533334444', 'es', '{"departamento": "ventas", "puesto": "gerente"}', 1),
+('gerente2', 'gerente2@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'María Fernández Castro', '+525544445555', 'es', '{"departamento": "marketing", "puesto": "gerente"}', 1),
 
 -- Supervisores
-('supervisor1', 'supervisor1@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Jorge Ramírez Díaz', '+525555556666', 'es', '{"departamento": "producción", "puesto": "supervisor"}'),
-('supervisor2', 'supervisor2@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Laura Gómez Méndez', '+525566667777', 'es', '{"departamento": "calidad", "puesto": "supervisor"}'),
-
+('supervisor1', 'supervisor1@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Jorge Ramírez Díaz', '+525555556666', 'es', '{"departamento": "producción", "puesto": "supervisor"}', 1),
+('supervisor2', 'supervisor2@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Laura Gómez Méndez', '+525566667777', 'es', '{"departamento": "calidad", "puesto": "supervisor"}', 1),
 -- Usuarios regulares
-('empleado1', 'empleado1@empresa.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Pedro Hernández Luna', '+525577778888', 'es', '{"departamento": "ventas", "puesto": "vendedor"}'),
-('empleado2', 'empleado2@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Sofía Vargas Ruíz', '+525588889999', 'es', '{"departamento": "marketing", "puesto": "diseñador"}'),
-('empleado3', 'empleado3@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Miguel Torres Ortega', '+525599990000', 'es', '{"departamento": "producción", "puesto": "operador"}'),
-('empleado4', 'empleado4@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Gabriela Reyes Soto', '+525500001111', 'es', '{"departamento": "calidad", "puesto": "inspector"}'),
+('empleado1', 'empleado1@empresa.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Pedro Hernández Luna', '+525577778888', 'es', '{"departamento": "ventas", "puesto": "vendedor"}', 1),
+('empleado2', 'empleado2@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Sofía Vargas Ruíz', '+525588889999', 'es', '{"departamento": "marketing", "puesto": "diseñador"}', 1),
+('empleado3', 'empleado3@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Miguel Torres Ortega', '+525599990000', 'es', '{"departamento": "producción", "puesto": "operador"}', 1),
+('empleado4', 'empleado4@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Gabriela Reyes Soto', '+525500001111', 'es', '{"departamento": "calidad", "puesto": "inspector"}', 1),
 
 -- Usuario inactivo (bloqueado)
-('inactivo1', 'inactivo@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', false, 'Usuario Bloqueado', '+525511110000', 'es', '{"motivo_bloqueo": "intentos fallidos excedidos"}'),
+('inactivo1', 'inactivo@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', false, 'Usuario Bloqueado', '+525511110000', 'es', '{"motivo_bloqueo": "intentos fallidos excedidos"}', 1),
 
 -- Usuario con múltiples roles
-('multiroles', 'multiroles@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Usuario Multirol', '+525522221111', 'en', '{"departamento": "sistemas", "puesto": "desarrollador"}'),
+('multiroles', 'multiroles@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Usuario Multirol', '+525522221111', 'en', '{"departamento": "sistemas", "puesto": "desarrollador"}', 1),
 
 -- Usuario para auditor
-('auditor1', 'auditor1@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Auditor Interno', '+525533332222', 'es', '{"departamento": "auditoria", "puesto": "auditor"}'),
+('auditor1', 'auditor1@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Auditor Interno', '+525533332222', 'es', '{"departamento": "auditoria", "puesto": "auditor"}', 1),
 
 -- Usuario de solo lectura
-('lectura1', 'lectura1@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Usuario Solo Lectura', '+525544443333', 'es', '{"departamento": "consultoria", "puesto": "consultor"}');
+('lectura1', 'lectura1@empresa.com', '$2b$10$4V1qVl5nYwQY1ZQ6WQ7QjOe8v8YwL1XqL9N8tR7S6T5U4V3W2E1R', true, 'Usuario Solo Lectura', '+525544443333', 'es', '{"departamento": "consultoria", "puesto": "consultor"}',1);
 
 -- Insertar rol super administrador
-INSERT INTO roles (nombre, descripcion, nivel_prioridad, es_sistema) 
-VALUES ('SUPER_ADMIN', 'Acceso completo a todo el sistema', 1000, true);
-
--- Insertar rol administrador
-INSERT INTO roles (nombre, descripcion, nivel_prioridad, es_sistema) 
-VALUES ('ADMIN', 'Administra usuarios y permisos', 100, true);
--- Insertar rol usuario básico
-INSERT INTO roles (nombre, descripcion, nivel_prioridad, es_sistema) 
-VALUES ('USER', 'Usuario básico del sistema', 10, true);
-
+INSERT INTO roles (nombre, descripcion, nivel_prioridad, es_sistema, tenant_id) 
+VALUES 
+('SUPER_ADMIN', 'Acceso completo a todo el sistema', 1000, true, 1),
+('ADMIN', 'Administra usuarios y permisos', 100, true, 1),
+('USER', 'Usuario básico del sistema', 10, true, 1);
 
 -- ============================================
 -- 3. Asignar rol Super Administrador al superadmin
@@ -336,20 +350,20 @@ VALUES
 ON CONFLICT (usuario_id, rol_id) DO NOTHING;
 
 -- Insertar menús básicos del sistema
-INSERT INTO menus (nombre, ruta, icono, orden, parent_id, descripcion) VALUES
-('Dashboard', '/dashboard', 'home', 1, NULL, 'Panel principal'),
-('Administración', '/admin', 'settings', 100, NULL, 'Módulo de administración'),
-('Usuarios', '/admin/usuarios', 'users', 1, 2, 'Gestión de usuarios'),
-('Roles', '/admin/roles', 'shield', 2, 2, 'Gestión de roles'),
-('Permisos', '/admin/permisos', 'key', 3, 2, 'Gestión de permisos'),
-('Menús', '/admin/menus', 'menu', 4, 2, 'Gestión de menús'),
-('Configuración', '/admin/config', 'sliders', 5, 2, 'Configuración del sistema'),
-('Auditoría', '/admin/auditoria', 'activity', 6, 2, 'Registros de auditoría'),
-('Reportes', '/admin/reportes', 'bar-chart', 7, 2, 'Reportes del sistema'),
-('Mi Perfil', '/perfil', 'user', 2, NULL, 'Perfil del usuario'),
-('Cambiar Contraseña', '/perfil/password', 'lock', 1, 10, 'Cambiar contraseña'),
-('Mis Sesiones', '/perfil/sesiones', 'monitor', 2, 10, 'Sesiones activas'),
-('Mi Actividad', '/perfil/actividad', 'list', 3, 10, 'Historial de actividad');
+INSERT INTO menus (nombre, ruta, icono, orden, parent_id, descripcion, tenant_id) VALUES
+('Dashboard', '/dashboard', 'home', 1, NULL, 'Panel principal', 1),
+('Administración', '/admin', 'settings', 100, NULL, 'Módulo de administración', 1),
+('Usuarios', '/admin/usuarios', 'users', 1, 2, 'Gestión de usuarios', 1),
+('Roles', '/admin/roles', 'shield', 2, 2, 'Gestión de roles', 1),
+('Permisos', '/admin/permisos', 'key', 3, 2, 'Gestión de permisos', 1),
+('Menús', '/admin/menus', 'menu', 4, 2, 'Gestión de menús', 1),
+('Configuración', '/admin/config', 'sliders', 5, 2, 'Configuración del sistema', 1),
+('Auditoría', '/admin/auditoria', 'activity', 6, 2, 'Registros de auditoría', 1),
+('Reportes', '/admin/reportes', 'bar-chart', 7, 2, 'Reportes del sistema', 1),
+('Mi Perfil', '/perfil', 'user', 2, NULL, 'Perfil del usuario', 1),
+('Cambiar Contraseña', '/perfil/password', 'lock', 1, 10, 'Cambiar contraseña', 1),
+('Mis Sesiones', '/perfil/sesiones', 'monitor', 2, 10, 'Sesiones activas', 1),
+('Mi Actividad', '/perfil/actividad', 'list', 3, 10, 'Historial de actividad', 1);
 
 -- INSERT INTO menus (id, nombre, ruta, icono, orden, visible) VALUES
 -- (1, 'Usuarios', '/usuarios', '👤', 10, true),

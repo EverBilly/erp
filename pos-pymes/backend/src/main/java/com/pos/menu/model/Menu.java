@@ -1,6 +1,7 @@
 package com.pos.menu.model;
 
 import com.pos.rol.model.Rol;
+import com.pos.tenant.model.Tenant;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import org.hibernate.annotations.Type;
 import jakarta.persistence.*;
@@ -17,6 +18,10 @@ public class Menu {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
     
     @Column(nullable = false, length = 100)
     private String nombre;

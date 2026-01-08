@@ -74,7 +74,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/test").permitAll()
                 
                 // Rutas protegidas
-                .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
+                .requestMatchers("/api/admin/**").hasAnyAuthority("ADMIN", "SUPER_ADMIN")
                 .requestMatchers("/api/usuarios/**").authenticated()
                 .requestMatchers("/api/menus/**").authenticated()
                 .requestMatchers("/api/roles/**").authenticated()

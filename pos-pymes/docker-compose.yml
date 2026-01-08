@@ -43,7 +43,6 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/pos_db
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
     volumes:
       - maven-repo:/root/.m2  # 👈 CACHE de Maven
     ports:
