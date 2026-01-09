@@ -3,6 +3,7 @@ package com.pos.usuario.dto;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 public class CrearUsuarioRequest {
     
@@ -22,7 +23,13 @@ public class CrearUsuarioRequest {
     private String nombreCompleto;
     
     private String telefono;
-    
+    private boolean activo = true;
+    private String avatarUrl;
+    private String timezone;
+    private String idioma;
+    private String metadata; // String para evitar conflicto
+    private List<Integer> roleIds;
+
     // Getters y Setters
     public String getUsername() {
         return username;
@@ -62,5 +69,53 @@ public class CrearUsuarioRequest {
     
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+
+    public boolean isActivo() {
+        return activo;
+    }
+
+    public void setActivo(boolean activo) {
+        this.activo = activo;
+    }
+
+    public String getAvatarUrl() {
+        return avatarUrl;
+    }
+
+    public void setAvatarUrl(String avatarUrl) {
+        this.avatarUrl = avatarUrl;
+    }
+
+    public String getTimezone() {
+        return timezone;
+    }
+
+    public void setTimezone(String timezone) {
+        this.timezone = timezone;
+    }
+
+    public String getIdioma() {
+        return idioma;
+    }
+
+    public void setIdioma(String idioma) {
+        this.idioma = idioma;
+    }
+
+    public String getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(String metadata) {
+        this.metadata = metadata;
+    }
+
+    public List<Integer> getRoleIds() {
+        return roleIds;
+    }
+
+    public void setRoleIds(List<Integer> roleIds) {
+        this.roleIds = roleIds;
     }
 }

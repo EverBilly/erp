@@ -2,21 +2,26 @@ package com.pos.usuario.controller;
 
 import com.pos.usuario.model.Usuario;
 import com.pos.rol.model.Rol;
+import com.pos.tenant.model.Tenant;
 import com.pos.usuario.service.UsuarioService;
 import com.pos.usuario.dto.UsuarioResponse;
+import com.pos.usuario.dto.CrearUsuarioRequest;
+import com.pos.usuario.dto.ActualizarUsuarioRequest;
+import com.pos.rol.repository.RolRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
-import org.hibernate.annotations.Type;
-
 import jakarta.validation.Valid;
+
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/usuarios")
@@ -24,9 +29,15 @@ import java.util.stream.Collectors;
 public class UsuarioController {
     
     private final UsuarioService usuarioService;
-    
-    public UsuarioController(UsuarioService usuarioService) {
+    private final RolRepository rolRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UsuarioController(UsuarioService usuarioService, 
+                            RolRepository rolRepository, 
+                            PasswordEncoder passwordEncoder) {
         this.usuarioService = usuarioService;
+        this.rolRepository = rolRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Método auxiliar para convertir Usuario a UsuarioResponse
@@ -71,27 +82,50 @@ public class UsuarioController {
     }
     
     @PostMapping
-    public ResponseEntity<?> createUsuario(@Valid @RequestBody Usuario usuario) {
-        // Validar que el username no exista
-        if (usuarioService.existsByUsername(usuario.getUsername())) {
+    public ResponseEntity<?> createUsuario(@Valid @RequestBody CrearUsuarioRequest request) {
+        if (usuarioService.existsByUsername(request.getUsername())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "El nombre de usuario ya existe"));
         }
         
-        // Validar que el email no exista
-        if (usuarioService.existsByEmail(usuario.getEmail())) {
+        if (usuarioService.existsByEmail(request.getEmail())) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "El email ya está registrado"));
         }
-        
-        Usuario nuevoUsuario = usuarioService.save(usuario);
-        UsuarioResponse dto = convertToDto(nuevoUsuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(dto);
+
+        Usuario nuevoUsuario = new Usuario();
+        nuevoUsuario.setUsername(request.getUsername());
+        nuevoUsuario.setEmail(request.getEmail());
+        nuevoUsuario.setNombreCompleto(request.getNombreCompleto());
+        nuevoUsuario.setTelefono(request.getTelefono());
+        nuevoUsuario.setActivo(request.isActivo());
+        nuevoUsuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+
+        // <--- ASIGNACIÓN TENANT Y METADATA ---
+        nuevoUsuario.setTenant(1L);
+        // Comentado temporalmente para evitar el error de tipo String->Map
+        // if (request.getMetadata() != null) { nuevoUsuario.setMetadata(request.getMetadata()); }
+        nuevoUsuario.setAvatarUrl(request.getAvatarUrl());
+        nuevoUsuario.setTimezone(request.getTimezone());
+        nuevoUsuario.setIdioma(request.getIdioma());
+
+        // Asignar Roles
+        if (request.getRoleIds() != null && !request.getRoleIds().isEmpty()) {
+            Set<Rol> roles = request.getRoleIds().stream()
+                    .map(id -> rolRepository.findById(id.longValue()).orElse(null))
+                    .filter(r -> r != null)
+                    .collect(Collectors.toSet());
+            nuevoUsuario.setRoles(roles);
+        }
+
+        Usuario guardado = usuarioService.save(nuevoUsuario);
+        return ResponseEntity.status(HttpStatus.CREATED).body(convertToDto(guardado));
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUsuario(@PathVariable Long id, @Valid @RequestBody Usuario usuarioDetails) {
-        Optional<Usuario> usuarioOpt = usuarioService.findById(id);
+    public ResponseEntity<?> updateUsuario(@PathVariable Long usuarioId, @Valid @RequestBody ActualizarUsuarioRequest request) {
+        // Cambiado el nombre del path variable a 'usuarioId' para evitar conflicto con local
+        Optional<Usuario> usuarioOpt = usuarioService.findById(usuarioId);
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Usuario no encontrado"));
@@ -99,59 +133,69 @@ public class UsuarioController {
         
         Usuario usuario = usuarioOpt.get();
         
-        // Validar que el email no esté en uso por otro usuario
-        if (usuarioDetails.getEmail() != null && 
-            !usuarioDetails.getEmail().equals(usuario.getEmail()) &&
-            usuarioService.existsByEmailAndIdNot(usuarioDetails.getEmail(), id)) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(Map.of("error", "El email ya está registrado por otro usuario"));
+        if (request.getEmail() != null && !request.getEmail().equals(usuario.getEmail())) {
+            if (usuarioService.existsByEmailAndIdNot(request.getEmail(), usuarioId)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(Map.of("error", "El email ya está en uso"));
+            }
+        }
+
+        if (request.getNombreCompleto() != null) {
+            usuario.setNombreCompleto(request.getNombreCompleto());
+        }
+        if (request.getEmail() != null) {
+            usuario.setEmail(request.getEmail());
+        }
+        if (request.getTelefono() != null) {
+            usuario.setTelefono(request.getTelefono());
         }
         
-        // Actualizar campos
-        if (usuarioDetails.getNombreCompleto() != null) {
-            usuario.setNombreCompleto(usuarioDetails.getNombreCompleto());
+        if (request.getAvatarUrl() != null) {
+            usuario.setAvatarUrl(request.getAvatarUrl());
         }
-        
-        if (usuarioDetails.getEmail() != null) {
-            usuario.setEmail(usuarioDetails.getEmail());
+        if (request.getTimezone() != null) {
+            usuario.setTimezone(request.getTimezone());
         }
-        
-        if (usuarioDetails.getTelefono() != null) {
-            usuario.setTelefono(usuarioDetails.getTelefono());
+        if (request.getIdioma() != null) {
+            usuario.setIdioma(request.getIdioma());
         }
-        
-        if (usuarioDetails.getAvatarUrl() != null) {
-            usuario.setAvatarUrl(usuarioDetails.getAvatarUrl());
+        if (request.getMetadata() != null) {
+            usuario.setMetadata(request.getMetadata());
         }
-        
-        if (usuarioDetails.getTimezone() != null) {
-            usuario.setTimezone(usuarioDetails.getTimezone());
+        if (request.getActivo() != null) {
+            usuario.setActivo(request.getActivo());
         }
-        
-        if (usuarioDetails.getIdioma() != null) {
-            usuario.setIdioma(usuarioDetails.getIdioma());
+
+        if (request.getPassword() != null && !request.getPassword().isEmpty()) {
+            usuario.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         }
-        
-        if (usuarioDetails.getMetadata() != null) {
-            usuario.setMetadata(usuarioDetails.getMetadata());
+
+        if (request.getRoleIds() != null) {
+            Set<Rol> nuevosRoles = request.getRoleIds().stream()
+                    .map(rid -> rolRepository.findById(rid.longValue()).orElse(null))
+                    .filter(r -> r != null)
+                    .collect(Collectors.toSet());
+            usuario.setRoles(nuevosRoles);
         }
-        
-        if (usuarioDetails.getActivo() != null) {
-            usuario.setActivo(usuarioDetails.getActivo());
+
+        try {
+            Usuario actualizado = usuarioService.save(usuario);
+            return ResponseEntity.ok(convertToDto(actualizado));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al actualizar: " + e.getMessage()));
         }
-        
-        // Solo actualizar password si se proporciona
-        if (usuarioDetails.getPasswordHash() != null && !usuarioDetails.getPasswordHash().isEmpty()) {
-            usuario.setPasswordHash(usuarioDetails.getPasswordHash());
-        }
-        
-        Usuario usuarioActualizado = usuarioService.save(usuario);
-        UsuarioResponse dto = convertToDto(usuarioActualizado);
-        return ResponseEntity.ok(dto);
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUsuario(@PathVariable Long id) {
+        // Protección: No borrar al superadmin (ID 1) ni a uno mismo
+        // (Lógica de "no borrarse a sí mismo" suele ir en Service o Frontend, pero aquí está bien)
+        if (id.equals(1L)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "No se puede eliminar al Super Administrador"));
+        }
+
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -182,6 +226,11 @@ public class UsuarioController {
     
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<?> desactivarUsuario(@PathVariable Long id) {
+        if (id.equals(1L)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "No se puede desactivar al Super Administrador"));
+        }
+
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -192,8 +241,7 @@ public class UsuarioController {
         usuario.setActivo(false);
         
         Usuario usuarioActualizado = usuarioService.save(usuario);
-        UsuarioResponse dto = convertToDto(usuarioActualizado);
-        return ResponseEntity.ok(dto);
+        return ResponseEntity.ok(convertToDto(usuarioActualizado));
     }
     
     @GetMapping("/buscar")

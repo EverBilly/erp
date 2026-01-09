@@ -36,6 +36,10 @@ public class Tenant {
     public Tenant() {
     }
 
+    public Tenant(Long id) {
+        this.id = id;
+    }
+
     // Getters y Setters
     public Long getId() {
         return id;

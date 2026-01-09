@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.pos.usuario.service.UsuarioServiceTest
--------------------------------------------------------------------------------
-Tests run: 19, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.168 s - in com.pos.usuario.service.UsuarioServiceTest

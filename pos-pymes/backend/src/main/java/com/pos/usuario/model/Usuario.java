@@ -9,8 +9,6 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Map;
-import java.util.HashMap;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import org.hibernate.annotations.Type;
 
@@ -65,7 +63,7 @@ public class Usuario {
 
     @Type(JsonBinaryType.class)
     @Column(columnDefinition = "jsonb")
-    private Map<String, Object> metadata = new HashMap<>();
+    private String metadata = "{}";
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -102,6 +100,18 @@ public class Usuario {
     
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getTenant() {
+        return tenant != null ? tenant.getId() : null;
+    }
+
+    public void setTenant(Long tenantId) {
+        if (tenantId != null) {
+            this.tenant = new Tenant(tenantId);
+        } else {
+            this.tenant = null;
+        }
     }
     
     public String getUsername() {
@@ -208,14 +218,11 @@ public class Usuario {
         this.idioma = idioma;
     }
     
-    public Map<String, Object> getMetadata() {
-        if (metadata == null) {
-            metadata = new HashMap<>();
-        }
+    public String getMetadata() {
         return metadata;
     }
     
-    public void setMetadata(Map<String, Object> metadata) {
+    public void setMetadata(String metadata) {
         this.metadata = metadata;
     }
     

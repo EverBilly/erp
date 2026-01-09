@@ -1,4 +1,5 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
   Paper,
@@ -6,41 +7,57 @@ import {
   TextField,
   Button,
   Box,
-  FormControlLabel,
-  Checkbox,
   Grid,
-  Alert
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  CircularProgress,
+  Alert,
+  FormControlLabel
 } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
+import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 
 const usuarioSchema = Yup.object().shape({
-  username: Yup.string()
-    .required('Requerido')
-    .min(3, 'Mínimo 3 caracteres'),
-  email: Yup.string()
-    .email('Email inválido')
-    .required('Requerido'),
+  username: Yup.string().required('Requerido').min(3, 'Mínimo 3 caracteres'),
+  email: Yup.string().email('Email inválido').required('Requerido'),
   nombreCompleto: Yup.string().required('Requerido'),
-  telefono: Yup.string().nullable(),
-  ...(window.location.pathname.includes('/nuevo') && {
-    password: Yup.string().required('Requerido').min(6, 'Mínimo 6 caracteres')
-  })
+  roleIds: Yup.array().min(1, 'Selecciona al menos un rol'), // Validación de roles
+  // Password solo requerido si es nuevo
 });
 
 const UsuarioForm = () => {
-  const navigate = useNavigate();
   const { id } = useParams();
+  const navigate = useNavigate();
   const isEdit = !!id;
 
+  const [roles, setRoles] = useState([]); // Lista de todos los roles disponibles
+  const [loadingRoles, setLoadingRoles] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchUsuario = async () => {
-    const response = await api.get(`/api/usuarios/${id}`);
-    return response.data;
-  };
+  // Cargar roles al montar el componente
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await api.get('/api/roles');
+        setRoles(response.data);
+      } catch (err) {
+        console.error("Error cargando roles", err);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    fetchRoles();
+
+    // Si es edición, cargar datos del usuario
+    if (isEdit) {
+      // Aquí podrías hacer un fetch para llenar el form si tus valores iniciales no están ya ahí
+    }
+  }, [isEdit, id]);
 
   const handleSubmit = async (values, { setSubmitting }) => {
     setError('');
@@ -48,16 +65,14 @@ const UsuarioForm = () => {
       if (isEdit) {
         await api.put(`/api/usuarios/${id}`, values);
       } else {
-        // Para crear, el backend espera `passwordHash` como campo de la contraseña en texto plano
         await api.post('/api/usuarios', {
           ...values,
-          passwordHash: values.password
+          passwordHash: values.password // Enviar el password como llega
         });
       }
       navigate('/usuarios');
     } catch (err) {
       setError(err.response?.data?.error || 'Error al guardar usuario');
-    } finally {
       setSubmitting(false);
     }
   };
@@ -65,16 +80,12 @@ const UsuarioForm = () => {
   return (
     <Container maxWidth="md">
       <Box sx={{ my: 4 }}>
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h4" gutterBottom>
-            {isEdit ? 'Editar Usuario' : 'Crear Usuario'}
+        <Paper elevation={3} sx={{ p: 4 }}>
+          <Typography variant="h5" gutterBottom>
+            {isEdit ? 'Editar Usuario' : 'Nuevo Usuario'}
           </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
           <Formik
             initialValues={{
@@ -84,13 +95,13 @@ const UsuarioForm = () => {
               telefono: '',
               activo: true,
               password: '',
-              ...(isEdit && { id })
+              roleIds: [] // Inicialmente vacío
             }}
             validationSchema={usuarioSchema}
             onSubmit={handleSubmit}
             enableReinitialize={isEdit}
           >
-            {({ values, errors, touched, isSubmitting, setFieldValue }) => (
+            {({ values, errors, touched, setFieldValue, isSubmitting }) => (
               <Form>
                 <Grid container spacing={2}>
                   <Grid item xs={12} sm={6}>
@@ -114,7 +125,6 @@ const UsuarioForm = () => {
                         <TextField
                           {...field}
                           label="Email"
-                          type="email"
                           fullWidth
                           error={touched.email && !!errors.email}
                           helperText={touched.email && errors.email}
@@ -150,20 +160,24 @@ const UsuarioForm = () => {
                   </Grid>
 
                   <Grid item xs={12} sm={6}>
-                    <FormControlLabel
-                      control={
-                        <Field name="activo">
-                          {({ field }) => (
-                            <Checkbox
-                              {...field}
-                              checked={field.value}
-                              onChange={(e) => setFieldValue('activo', e.target.checked)}
-                            />
-                          )}
-                        </Field>
-                      }
-                      label="Usuario activo"
-                    />
+                    {/* Checkbox Activo */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                      <Field name="activo">
+                        {({ field }) => (
+                          <FormControlLabel
+                            control={
+                              <input
+                                type="checkbox"
+                                checked={field.value}
+                                onChange={(e) => setFieldValue('activo', e.target.checked)}
+                                style={{ width: 20, height: 20 }}
+                              />
+                            }
+                            label="Usuario Activo"
+                          />
+                        )}
+                      </Field>
+                    </Box>
                   </Grid>
 
                   {!isEdit && (
@@ -183,17 +197,57 @@ const UsuarioForm = () => {
                     </Grid>
                   )}
 
+                  {/* <--- SELECTOR MÚLTIPLE DE ROLES ---> */}
                   <Grid item xs={12}>
-                    <Box sx={{ display: 'flex', gap: 2, justifyContent: 'flex-end' }}>
+                    <FormControl fullWidth error={touched.roleIds && !!errors.roleIds}>
+                      <InputLabel>Asignar Roles</InputLabel>
+                      {loadingRoles ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}>
+                          <CircularProgress size={20} />
+                        </Box>
+                      ) : (
+                        <Field name="roleIds">
+                          {({ field }) => (
+                            <Select
+                              {...field}
+                              multiple
+                              value={field.value || []}
+                              onChange={(e) => setFieldValue('roleIds', e.target.value)}
+                              renderValue={(selected) => (
+                                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                  {selected.map((value) => {
+                                    const role = roles.find(r => r.id === value);
+                                    return (
+                                      <Chip key={value} label={role ? role.nombre : value} />
+                                    );
+                                  })}
+                                </Box>
+                              )}
+                            >
+                              {roles.map((role) => (
+                                <MenuItem key={role.id} value={role.id}>
+                                  {role.nombre}
+                                </MenuItem>
+                              ))}
+                            </Select>
+                          )}
+                        </Field>
+                      )}
+                      {touched.roleIds && errors.roleIds && (
+                        <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                          {errors.roleIds}
+                        </Typography>
+                      )}
+                    </FormControl>
+                  </Grid>
+
+                  <Grid item xs={12}>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
                       <Button onClick={() => navigate('/usuarios')}>
                         Cancelar
                       </Button>
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        disabled={isSubmitting}
-                      >
-                        {isEdit ? 'Actualizar' : 'Crear'}
+                      <Button type="submit" variant="contained" disabled={isSubmitting}>
+                        {isSubmitting ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Crear')}
                       </Button>
                     </Box>
                   </Grid>

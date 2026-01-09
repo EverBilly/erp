@@ -25,6 +25,10 @@ public class UserPrincipal implements UserDetails {
     
     private Collection<? extends GrantedAuthority> authorities;
     
+    // IMPORTANTE: Campo usuario para acceso a Tenant
+    private Usuario usuario; 
+
+    // Constructor 1: Login (Usuario completo)
     public UserPrincipal(Long id, String username, String email, String password, 
                         String nombreCompleto, Boolean activo,
                         Collection<? extends GrantedAuthority> authorities) {
@@ -37,40 +41,68 @@ public class UserPrincipal implements UserDetails {
         this.authorities = authorities;
     }
     
+    // Constructor 2: Usado por create()
+    public UserPrincipal(Usuario usuario, Collection<? extends GrantedAuthority> authorities) {
+        this.usuario = usuario;
+        this.id = usuario.getId();
+        this.username = usuario.getUsername();
+        this.email = usuario.getEmail();
+        this.password = usuario.getPasswordHash();
+        this.nombreCompleto = usuario.getNombreCompleto();
+        this.activo = usuario.getActivo();
+        this.authorities = authorities;
+    }
+
+    // <--- ESTE ES EL MÉTODO IMPORTANTE ---
     public static UserPrincipal create(Usuario usuario) {
         List<GrantedAuthority> authorities = usuario.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getNombre()))
                 .collect(Collectors.toList());
         
-        return new UserPrincipal(
-            usuario.getId(),
-            usuario.getUsername(),
-            usuario.getEmail(),
-            usuario.getPasswordHash(),
-            usuario.getNombreCompleto(),
-            usuario.getActivo(),
-            authorities
-        );
+        return new UserPrincipal(usuario, authorities);
     }
-    
-    // Getters
+
+    // Getters y Setters
     public Long getId() {
         return id;
     }
-    
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getEmail() {
         return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
     }
     
     public String getNombreCompleto() {
         return nombreCompleto;
     }
     
+    public void setNombreCompleto(String nombreCompleto) {
+        this.nombreCompleto = nombreCompleto;
+    }
+    
     public Boolean getActivo() {
         return activo;
     }
     
-    // Implementación de UserDetails
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+    
+    public Long getTenantId() {
+        // Aquí accedemos a través del objeto usuario
+        if (this.usuario != null) {
+            return this.usuario.getTenant();
+        }
+        return null;
+    }
+
     @Override
     public String getUsername() {
         return username;
