@@ -353,7 +353,7 @@ ON CONFLICT (usuario_id, rol_id) DO NOTHING;
 INSERT INTO menus (nombre, ruta, icono, orden, parent_id, descripcion, tenant_id) VALUES
 ('Dashboard', '/dashboard', 'home', 1, NULL, 'Panel principal', 1),
 ('Administración', '/admin', 'settings', 100, NULL, 'Módulo de administración', 1),
-('Usuarios', '/admin/usuarios', 'users', 1, 2, 'Gestión de usuarios', 1),
+('Usuarios', '/usuarios', 'users', 1, 2, 'Gestión de usuarios', 1),
 ('Roles', '/admin/roles', 'shield', 2, 2, 'Gestión de roles', 1),
 ('Permisos', '/admin/permisos', 'key', 3, 2, 'Gestión de permisos', 1),
 ('Menús', '/admin/menus', 'menu', 4, 2, 'Gestión de menús', 1),

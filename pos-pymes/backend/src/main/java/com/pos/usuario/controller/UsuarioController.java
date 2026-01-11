@@ -53,8 +53,13 @@ public class UsuarioController {
         dto.setUltimoLogin(usuario.getUltimoLogin());
         
         // Extraer solo los nombres de los roles
-        List<String> nombresRoles = usuario.getRoles().stream()
-            .map(Rol::getNombre)
+        List<Map<String, Object>> nombresRoles = usuario.getRoles().stream()
+            .map(rol -> {
+                Map<String, Object> rolMap = new HashMap<>();
+                rolMap.put("id", rol.getId());
+                rolMap.put("nombre", rol.getNombre());
+                return rolMap;
+            })
             .collect(Collectors.toList());
         dto.setRoles(nombresRoles);
         
@@ -123,9 +128,9 @@ public class UsuarioController {
     }
     
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUsuario(@PathVariable Long usuarioId, @Valid @RequestBody ActualizarUsuarioRequest request) {
-        // Cambiado el nombre del path variable a 'usuarioId' para evitar conflicto con local
-        Optional<Usuario> usuarioOpt = usuarioService.findById(usuarioId);
+    public ResponseEntity<?> updateUsuario(@PathVariable Long id, @Valid @RequestBody ActualizarUsuarioRequest request) {
+        // Cambiado el nombre del path variable a 'id' para evitar conflicto con local
+        Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Usuario no encontrado"));
@@ -134,7 +139,7 @@ public class UsuarioController {
         Usuario usuario = usuarioOpt.get();
         
         if (request.getEmail() != null && !request.getEmail().equals(usuario.getEmail())) {
-            if (usuarioService.existsByEmailAndIdNot(request.getEmail(), usuarioId)) {
+            if (usuarioService.existsByEmailAndIdNot(request.getEmail(), id)) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                         .body(Map.of("error", "El email ya está en uso"));
             }
@@ -201,9 +206,14 @@ public class UsuarioController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("error", "Usuario no encontrado"));
         }
-        
-        usuarioService.deleteById(id);
-        return ResponseEntity.ok(Map.of("message", "Usuario eliminado correctamente"));
+
+        try {
+            usuarioService.softDelete(id);
+            return ResponseEntity.ok(Map.of("message", "Usuario eliminado correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error al desactivar usuario: " + e.getMessage()));
+        }
     }
     
     @PatchMapping("/{id}/activar")

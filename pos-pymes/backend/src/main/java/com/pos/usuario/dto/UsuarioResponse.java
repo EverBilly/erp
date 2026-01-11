@@ -2,6 +2,7 @@ package com.pos.usuario.dto;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public class UsuarioResponse {
     
@@ -13,7 +14,7 @@ public class UsuarioResponse {
     private boolean activo;
     private LocalDateTime fechaCreacion;
     private LocalDateTime ultimoLogin;
-    private List<String> roles;
+    private List<Map<String, Object>> roles;
     
     // Constructores
     public UsuarioResponse() {
@@ -21,7 +22,7 @@ public class UsuarioResponse {
     
     public UsuarioResponse(Long id, String username, String email, String nombreCompleto, 
                           String telefono, boolean activo, LocalDateTime fechaCreacion,
-                          LocalDateTime ultimoLogin, List<String> roles) {
+                          LocalDateTime ultimoLogin, List<Map<String, Object>> roles) {
         this.id = id;
         this.username = username;
         this.email = email;
@@ -98,11 +99,11 @@ public class UsuarioResponse {
         this.ultimoLogin = ultimoLogin;
     }
     
-    public List<String> getRoles() {
+    public List<Map<String, Object>> getRoles() {
         return roles;
     }
-    
-    public void setRoles(List<String> roles) {
+
+    public void setRoles(List<Map<String, Object>> roles) {
         this.roles = roles;
     }
 }

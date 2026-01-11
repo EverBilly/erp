@@ -54,10 +54,25 @@ public class UsuarioService {
         
         return usuarioRepository.save(usuario);
     }
+
+    @Transactional
+    public void softDelete(Long id) {
+        Usuario usuario = findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado: " + id));
+        // Simplemente desactivamos el usuario
+        usuario.setActivo(false);
+        
+        // Opcional: Limpiamos el bloqueo para facilitar la reactivación
+        usuario.setBloqueadoHasta(null);
+        usuario.setIntentosLogin(0);
+        
+        // Guardamos. Las relaciones (Roles, Tenant) se mantienen intactas.
+        usuarioRepository.save(usuario);
+    }
     
     @Transactional
     public void deleteById(Long id) {
-        usuarioRepository.deleteById(id);
+        usuarioRepository.deleteById(id); 
     }
     
     @Transactional(readOnly = true)
@@ -132,11 +147,20 @@ public class UsuarioService {
     }
     
     @Transactional(readOnly = true)
-    public List<Usuario> findAllByRole(String rolName) {
-        return usuarioRepository.findAllByRole(rolName);
+    public List<Usuario> findAllByRole(String rolNombre) {
+        // Implementación simplificada (filtro en memoria) para evitar queries JPQL complejos ahora
+        return usuarioRepository.findAll().stream()
+                .filter(u -> u.getRoles() != null && 
+                           u.getRoles().stream().anyMatch(r -> r.getNombre().equals(rolNombre)))
+                .toList();
     }
     
     public boolean validatePassword(String rawPassword, String encodedPassword) {
         return passwordEncoder.matches(rawPassword, encodedPassword);
+    }
+
+    @Transactional(readOnly = true)
+    public long count() {
+        return usuarioRepository.count();
     }
 }
