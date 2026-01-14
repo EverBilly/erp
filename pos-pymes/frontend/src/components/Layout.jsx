@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import {
@@ -127,7 +127,7 @@ const SidebarItem = ({ item, depth = 0, onNavigate, currentPath }) => {
 };
 // -------------------------------------------------
 
-const Layout = ({ children }) => {
+const Layout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const { user, logout, menuTree, loading } = useAuth();
@@ -307,7 +307,7 @@ const Layout = ({ children }) => {
           mt: 8
         }}
       >
-        {children}
+        <Outlet />
       </Box>
     </Box>
   );

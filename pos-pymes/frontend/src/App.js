@@ -34,19 +34,17 @@ function App() {
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
-              <Route path="/" element={
-                <PrivateRoute>
-                  <Layout>
-                    <Dashboard />
-                  </Layout>
-                </PrivateRoute>
-              } />
+              <Route
+                element={
+                  <PrivateRoute>
+                    <Layout />
+                  </PrivateRoute>
+                }
+              >
+                <Route index element={<Dashboard />} />
+                <Route path="usuarios/*" element={<UsuariosView />} />
+              </Route>
               <Route path="*" element={<Navigate to="/" />} />
-              <Route path="/usuarios/*" element={
-                <PrivateRoute>
-                  <UsuariosView />
-                </PrivateRoute>
-              } />
             </Routes>
           </AuthProvider>
         </Router>
