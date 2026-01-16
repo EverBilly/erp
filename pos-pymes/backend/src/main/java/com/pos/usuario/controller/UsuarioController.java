@@ -65,8 +65,20 @@ public class UsuarioController {
         
         return dto;
     }
+
+    private Long obtenerUserIdDelContexto() {
+        org.springframework.security.core.Authentication auth = 
+            org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        
+        if (auth != null && auth.getPrincipal() instanceof com.pos.shared.security.UserPrincipal) {
+            return ((com.pos.shared.security.UserPrincipal) auth.getPrincipal()).getId();
+        }
+        
+        throw new IllegalStateException("Usuario no autenticado");
+    }
     
     @GetMapping
+    @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     public ResponseEntity<List<UsuarioResponse>> getAllUsuarios() {
         List<Usuario> usuarios = usuarioService.findAll();
         List<UsuarioResponse> dtos = usuarios.stream()
@@ -196,6 +208,13 @@ public class UsuarioController {
     public ResponseEntity<?> deleteUsuario(@PathVariable Long id) {
         // Protección: No borrar al superadmin (ID 1) ni a uno mismo
         // (Lógica de "no borrarse a sí mismo" suele ir en Service o Frontend, pero aquí está bien)
+
+        Long userIdLogueado = obtenerUserIdDelContexto();
+        if (id.equals(userIdLogueado)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "No puedes desactivar tu propia cuenta"));
+        }
+
         if (id.equals(1L)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "No se puede eliminar al Super Administrador"));
@@ -236,6 +255,13 @@ public class UsuarioController {
     
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<?> desactivarUsuario(@PathVariable Long id) {
+
+        Long userIdLogueado = obtenerUserIdDelContexto();
+        if (id.equals(userIdLogueado)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("error", "No puedes desactivar tu propia cuenta"));
+        }
+
         if (id.equals(1L)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("error", "No se puede desactivar al Super Administrador"));

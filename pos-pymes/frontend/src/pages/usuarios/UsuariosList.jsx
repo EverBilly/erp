@@ -23,43 +23,44 @@ import { Edit, Delete, Add, Person as PersonIcon, RestoreFromTrash as RestoreIco
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 
 const UsuariosList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { showNotification } = useNotification();
+  const { user } = useAuth();
 
-  // <--- CARGA INICIAL (SÓLO ACTIVOS) --->
-  useEffect(() => {
-    const fetchUsuarios = async () => {
-      try {
-        // <--- CAMBIO AQUÍ: Usamos el endpoint de ACTIVOS --->
-        const response = await api.get('/usuarios/activos'); 
-        setUsuarios(response.data);
-      } catch (error) {
-        console.error('Error al cargar usuarios:', error);
-        showNotification('Error al cargar usuarios', 'error');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsuarios();
-  }, [showNotification]);
+  // <--- CARGA INICIAL USUARIOS --->
+  const fetchUsuariosList = async () => {
+    try {
+      const isSuperAdmin = user?.roles?.some(r => r.authority === 'SUPER_ADMIN');
+      // Elegir endpoint segun el rol
+      const endpoint = isSuperAdmin ? '/usuarios' : '/usuarios/activos';
+
+      const response = await api.get(endpoint); 
+      setUsuarios(response.data);
+    } catch (error) {
+      console.error('Error al cargar usuarios:', error);
+      showNotification('Error al cargar usuarios', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDelete = async (id, nombre) => {
     if (window.confirm(`¿Estás seguro de DESACTIVAR al usuario ${nombre}?`)) {
       try {
         await api.delete(`/usuarios/${id}`);
         showNotification('Usuario desactivado correctamente', 'warning');
-        // Recargar lista (ahora debería desaparecer)
-        setUsuarios(prev => prev.filter(u => u.id !== id));
+        fetchUsuariosList();
       } catch (error) {
         showNotification('Error al desactivar usuario', 'error');
       }
     }
   };
-  
+
   // <--- FUNCIÓN DE ACTIVACIÓN (Para usuarios inactivos) --->
   const handleRestore = async (id, nombre) => {
     if (window.confirm(`¿Estás seguro de REACTIVAR al usuario ${nombre}?`)) {
@@ -67,13 +68,19 @@ const UsuariosList = () => {
         // Usamos el endpoint de activar (Patch)
         await api.patch(`/usuarios/${id}/activar`);
         showNotification('Usuario reactivado correctamente', 'success');
-        // Recargar lista (ahora debería aparecer si tenemos lógica de ver todos, o se mantiene en lista actual)
-        window.location.reload(); // Opcional para refrescar simple si lógica compleja
+        fetchUsuariosList();
       } catch (error) {
         showNotification('Error al reactivar usuario', 'error');
       }
     }
   };
+  
+  useEffect(() => {
+    if(user) {
+      fetchUsuariosList();
+    }
+  }, [showNotification, user]);
+  
 
   if (loading) {
     // Skeletons para que se vea bonito mientras carga
@@ -137,7 +144,7 @@ const UsuariosList = () => {
                   <TableCell>
                     {/* <--- LÓGICA INTELIGENTE DE BOTONES --->*/}
                     {/* Si usuario es SUPERADMIN (ID 1), no mostrar botones */}
-                    {usuario.username !== 'superadmin' ? (
+                    {usuario.username !== 'superadmin' && usuario.id !== user?.id  ? (
                       <>
                         <Tooltip title="Editar">
                           <IconButton
@@ -172,7 +179,7 @@ const UsuariosList = () => {
                       </>
                     ) : (
                       <Typography variant="caption" color="textSecondary">
-                        (Protegido)
+                        {usuario.id === user?.id ? '(Tu cuenta)' : '(Protegido)'}
                       </Typography>
                     )}
                   </TableCell>
