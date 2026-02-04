@@ -26,113 +26,17 @@ import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
   Home as HomeIcon,
-  PointOfSale as PosIcon,
-  Inventory as InventoryIcon,
-  People as PeopleIcon,
-  Assessment as AssessmentIcon,
-  Settings as SettingsIcon,
-  Logout as LogoutIcon,
   Person as PersonIcon,
-  Security as SecurityIcon,
-  Lock as LockIcon,
-  Key as KeyIcon,
-  Monitor as MonitorIcon,
-  Description as DescriptionIcon,
-  ExpandLess,
-  ExpandMore,
+  Logout as LogoutIcon,
 } from '@mui/icons-material';
+import Sidebar from './Sidebar';
 
-const drawerWidth = 240;
-
-// --- COMPONENTE RECURSIVO PARA SUBMENÚS ---
-const SidebarItem = ({ item, depth = 0, onNavigate, currentPath }) => {
-  const [open, setOpen] = useState(false);
-  const isLeaf = !item.children || item.children.length === 0;
-
-  // Mapeo de nombres de BD a Componentes de Iconos MUI
-  const getIcon = (iconName) => {
-    const iconMap = {
-        'home': <DashboardIcon />,
-        'dashboard': <DashboardIcon />,
-        'settings': <SettingsIcon />,
-        'sliders': <SettingsIcon />,
-        'users': <PeopleIcon />,
-        'shield': <SecurityIcon />,
-        'key': <KeyIcon />,
-        'menu': <MenuIcon />,
-        'activity': <AssessmentIcon />,
-        'bar-chart': <AssessmentIcon />,
-        'user': <PersonIcon />,
-        'lock': <LockIcon />,
-        'monitor': <MonitorIcon />,
-        'list': <DescriptionIcon />,
-        'default': <DashboardIcon />
-    };
-    // Si el icono no existe, muestra el default
-    return iconMap[iconName] || iconMap['default'];
-  };
-
-  const handleClick = () => {
-    if (isLeaf) {
-      onNavigate(item.ruta);
-    } else {
-      setOpen(!open);
-    }
-  };
-
-  // Estilo visual para item activo
-  const isSelected = currentPath === item.ruta;
-  
-  // Indentación para submenús
-  const paddingLeft = 16 + (depth * 16);
-
-  return (
-    <>
-      <ListItem disablePadding>
-        <ListItemButton 
-          onClick={handleClick}
-          sx={{ 
-            pl: `${paddingLeft}px`,
-            backgroundColor: isSelected ? 'primary.main' : 'transparent',
-            color: isSelected ? 'white' : 'inherit',
-            '&:hover': {
-              backgroundColor: isSelected ? 'primary.dark' : 'rgba(0, 0, 0, 0.04)'
-            }
-          }}
-        >
-          <ListItemIcon sx={{ color: isSelected ? 'white' : 'inherit' }}>
-            {getIcon(item.icono)}
-          </ListItemIcon>
-          <ListItemText primary={item.nombre} sx={{ whiteSpace: 'normal' }} />
-          {!isLeaf ? (open ? <ExpandLess /> : <ExpandMore />) : null}
-        </ListItemButton>
-      </ListItem>
-      
-      {/* Renderizar hijos recursivamente si existen */}
-      {!isLeaf && (
-        <Collapse in={open} timeout="auto" unmountOnExit>
-          <List disablePadding>
-            {item.children.map((child) => (
-              <SidebarItem 
-                key={child.id} 
-                item={child} 
-                depth={depth + 1} 
-                onNavigate={onNavigate}
-                currentPath={currentPath}
-              />
-            ))}
-          </List>
-        </Collapse>
-      )}
-    </>
-  );
-};
-// -------------------------------------------------
+const drawerWidth = 256;
 
 const Layout = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
-  const { user, logout, menuTree, loading } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth(); // <-- Eliminar menuTree, loading
   const [desktopOpen, setDesktopOpen] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
@@ -158,46 +62,6 @@ const Layout = () => {
     navigate('/login');
     handleMenuClose();
   };
-
-  // Contenido del Drawer (ahora dinámico desde el Contexto)
-  const drawer = (
-    <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          POS System
-        </Typography>
-      </Toolbar>
-      <Divider />
-      <List>
-        {/* ESTADO 1: ESTÁ CARGANDO (LOGIN EN PROCESO) */}
-        {loading ? (
-          <ListItem>
-            <CircularProgress size={20} sx={{ mr: 2 }} /> {/* Icono de carga opcional */}
-            <ListItemText primary="Cargando..." />
-          </ListItem>
-        ) : menuTree.length > 0 ? (
-
-          /* ESTADO 2: MENÚ CARGADO EXITOSAMENTE */
-          menuTree.map((item) => (
-            <SidebarItem 
-              key={item.id} 
-              item={item} 
-              onNavigate={(path) => navigate(path)}
-              currentPath={location.pathname}
-            />
-          ))
-        ) : (
-          /* ESTADO 3: SIN MENÚS (ESTADO VACÍO) */
-          <ListItem>
-            <ListItemText 
-            primary="Sin acceso a módulos"
-            secondary="Contacte al administrador para asignarle permisos." 
-            />
-          </ListItem>
-        )}
-      </List>
-    </div>
-  );
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -230,7 +94,7 @@ const Layout = () => {
             {desktopOpen ? <MenuIcon/> : <ChevronLeftIcon />}
           </IconButton>
 
-          {/* ✅ BOTÓN "INICIO" */}
+          {/* ✅ BOTÓN "INICIO" - AÑADIDO AQUÍ */}
           <IconButton
             color="inherit"
             aria-label="home"
@@ -281,35 +145,39 @@ const Layout = () => {
         </Toolbar>
       </AppBar>
       
+      {/* --- SIDEBAR --- */}
+      {/* Versión móvil */}
+      <Drawer
+        variant="temporary"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{
+          keepMounted: true, // Better open performance on mobile.
+        }}
+        sx={{
+          display: { xs: 'block', sm: 'none' },
+          '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+        }}
+      >
+        <Sidebar />
+      </Drawer>
+      {/* Versión escritorio */}
       <Box
         component="nav"
         sx={{ display: { sm: desktopOpen ? 'block' : 'none' }, width: drawerWidth, flexShrink: { sm: 0 }, transition: 'all 0.3s ease' }}
       >
         <Drawer
-          variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
-          ModalProps={{
-            keepMounted: true, // Better open performance on mobile.
-          }}
-          sx={{
-            display: { xs: 'block', sm: 'none' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
-          }}
-        >
-          {drawer}
-        </Drawer>
-        <Drawer
           variant="permanent"
           sx={{
             display: { xs: 'none', sm: 'block' },
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth, borderRight: 'none' }, // Quitar borde derecho del drawer, Sidebar lo tiene
           }}
           open
         >
-          {drawer}
+          <Sidebar /> {/* <-- Renderizar el componente Sidebar aquí */}
         </Drawer>
       </Box>
+      {/* ----------------- */}
       
       <Box
         component="main"

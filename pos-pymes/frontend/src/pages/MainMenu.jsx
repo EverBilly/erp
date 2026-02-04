@@ -10,66 +10,14 @@ import {
   useTheme,
   useMediaQuery,
   CircularProgress,
-  Alert
+  Alert,
+  IconButton,
+  Tooltip
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-
-// Iconos de Material UI
-import {
-  Home,
-  People,
-  Settings,
-  Shield,
-  Key,
-  Menu as MenuIcon,
-  Assessment,
-  Person,
-  Lock,
-  Monitor,
-  List,
-  Dashboard,
-  AdminPanelSettings,
-  Assignment,
-  BarChart,
-  Inventory,
-  ShoppingCart,
-  Receipt,
-  Build,
-  History,
-  Report,
-  VerifiedUser,
-  Security
-} from '@mui/icons-material';
-
-// Mapeo de iconos (puedes extenderlo según tu backend)
-const ICON_MAP = {
-  'home': Home,
-  'users': People,
-  'settings': Settings,
-  'shield': Shield,
-  'key': Key,
-  'menu': MenuIcon,
-  'activity': Assessment,
-  'bar-chart': BarChart,
-  'user': Person,
-  'lock': Lock,
-  'monitor': Monitor,
-  'list': List,
-  'dashboard': Dashboard,
-  'admin_panel_settings': AdminPanelSettings,
-  'assignment': Assignment,
-  'inventory': Inventory,
-  'shopping_cart': ShoppingCart,
-  'receipt': Receipt,
-  'build': Build,
-  'history': History,
-  'report': Report,
-  'verified_user': VerifiedUser,
-  'security': Security,
-  'default': Person
-};
+import { getIconComponent } from '../utils/iconMapper';
 
 const MainMenu = () => {
   const [menus, setMenus] = useState([]);
@@ -115,6 +63,17 @@ const MainMenu = () => {
     );
   }
 
+  // Función para obtener color por categoría
+  const getCategoryColor = (nombre) => {
+    if (nombre.toLowerCase().includes('administración') || nombre.toLowerCase().includes('admin')) return '#1976d2';
+    if (nombre.toLowerCase().includes('usuarios') || nombre.toLowerCase().includes('usuario')) return '#e91e63';
+    if (nombre.toLowerCase().includes('configuración') || nombre.toLowerCase().includes('config')) return '#607d8b';
+    if (nombre.toLowerCase().includes('reportes') || nombre.toLowerCase().includes('reporte')) return '#9c27b0';
+    if (nombre.toLowerCase().includes('finanzas') || nombre.toLowerCase().includes('caja') || nombre.toLowerCase().includes('pago')) return '#4caf50';
+    if (nombre.toLowerCase().includes('inventario') || nombre.toLowerCase().includes('stock')) return '#ff9800';
+    if (nombre.toLowerCase().includes('ventas') || nombre.toLowerCase().includes('pedido')) return '#2196f3';
+    return '#757575';
+  };
 
   return (
     <Container maxWidth="xl" sx={{ py: 4, minHeight: '100vh' }}>
@@ -139,7 +98,7 @@ const MainMenu = () => {
       ) : (
         <Grid container spacing={3}>
           {menus.map((item) => {
-            const IconComponent = ICON_MAP[item.icono] || ICON_MAP['default'];
+            const IconComponent = getIconComponent(item.icono);
             return (
               <Grid item xs={12} sm={6} md={3} key={item.id}>
                 <Button
@@ -156,22 +115,17 @@ const MainMenu = () => {
                       alignItems: 'center',
                       textAlign: 'center',
                       padding: 2,
-                      borderRadius: 2,
+                      borderRadius: '12px',
                       border: `1px solid ${theme.palette.divider}`,
                       bgcolor: theme.palette.background.paper,
-                      transition: 'all 0.3s ease',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                      transition: 'all 0.3s cubic-bezier(0.17, 0.67, 0.88, 1.0)',
+                      boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
                       '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 6px 16px rgba(0,0,0,0.1)',
-                        borderColor: theme.palette.primary.main,
+                        transform: 'translateY(-6px) scale(1.02)',
+                        boxShadow: '0 12px 30px rgba(0,0,0,0.12)',
+                        borderColor: getCategoryColor(item.nombre),
                         bgcolor: theme.palette.action.hover,
                       },
-                      // Colores por categoría
-                      ...(item.nombre.includes('Administración') && { borderColor: '#1976d2' }),
-                      ...(item.nombre.includes('Usuarios') && { borderColor: '#e91e63' }),
-                      ...(item.nombre.includes('Configuración') && { borderColor: '#607d8b' }),
-                      ...(item.nombre.includes('Reportes') && { borderColor: '#9c27b0' }),
                     },
                     '& .MuiCardContent-root': {
                       p: 2,

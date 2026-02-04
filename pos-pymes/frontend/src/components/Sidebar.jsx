@@ -1,95 +1,132 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import * as AiIcons from 'react-icons/ai'; // Ant Design Icons (muy bonitos)
 import { useAuth } from '../context/AuthContext';
-
-// Helper para mapear el string del backend al Icono de React
-const getIcon = (iconName) => {
-    // Mapeo manual para los iconos que tienes en la DB
-    // Puedes agregar más según aparezcan en tu DB
-    const iconMap = {
-        'home': AiIcons.AiFillHome,
-        'settings': AiIcons.AiFillSetting,
-        'users': AiIcons.AiFillContacts,
-        'shield': AiIcons.AiFillSafety,
-        'key': AiIcons.AiFillKey,
-        'menu': AiIcons.AiFillMenu,
-        'sliders': AiIcons.AiFillControl,
-        'activity': AiIcons.AiFillAudio,
-        'bar-chart': AiIcons.AiFillBarChart,
-        'user': AiIcons.AiFillUser,
-        'lock': AiIcons.AiFillLock,
-        'monitor': AiIcons.AiFillMonitor,
-        'list': AiIcons.AiFillFileText,
-        // Fallback por si falta alguno
-        'default': AiIcons.AiFillAppstore
-    };
-    const IconComponent = iconMap[iconName] || iconMap['default'];
-    return <IconComponent size={20} className="mr-2" />;
-};
+import {
+    Box,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Divider,
+    Collapse,
+    Typography,
+    IconButton,
+    Tooltip
+} from '@mui/material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
+import { getIconComponent } from '../utils/iconMapper';
 
 const MenuItem = ({ item, depth = 0 }) => {
     const location = useLocation();
+    const [open, setOpen] = React.useState(false);
+    const isLeaf = !item.children || item.children.length === 0;
+
     const isActive = location.pathname === item.ruta;
     
-    // Estilos dinámicos
-    const activeClass = isActive ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700';
-    const paddingLeft = depth * 16 + 12; // Indentación para hijos
+    const handleClick = () => {
+        if (!isLeaf) {
+            // Navegar si es hoja
+        } else {
+            // Si no es hoja, expandir/colapsar
+            setOpen(!open);
+        }
+    };
+    
+    const paddingLeft = depth * 16;
+    const IconComponent = getIconComponent(item.icono);
 
-    // Si tiene hijos, renderizamos recursivamente
-    if (item.children && item.children.length > 0) {
-        return (
-            <div>
-                <div className={`flex items-center px-4 py-3 text-sm font-medium cursor-pointer ${activeClass}`} style={{ paddingLeft }}>
-                    {getIcon(item.icono)}
-                    <span>{item.nombre}</span>
-                    <span className="ml-auto text-xs">▼</span>
-                </div>
-                {/* Renderizar hijos recursivamente */}
-                <div className="bg-gray-800">
-                    {item.children.map(child => (
-                        <MenuItem key={child.id} item={child} depth={depth + 1} />
-                    ))}
-                </div>
-            </div>
-        );
-    }
-
-    // Si es hoja (sin hijos)
-    return (
-        <Link to={item.ruta} className="block text-decoration-none">
-            <div className={`flex items-center px-4 py-3 text-sm font-medium transition-colors cursor-pointer ${activeClass}`} style={{ paddingLeft }}>
-                {getIcon(item.icono)}
-                <span>{item.nombre}</span>
-            </div>
-        </Link>
-    );
+  return (
+    <>
+      <ListItem disablePadding>
+        <ListItemButton
+          component={Link}
+          to={item.ruta}
+          onClick={handleClick}
+          sx={{
+            pl: `${paddingLeft}px`,
+            backgroundColor: isActive ? 'primary.main' : 'transparent',
+            color: isActive ? 'white' : 'inherit',
+            '&:hover': {
+              backgroundColor: isActive ? 'primary.dark' : 'rgba(0, 0, 0, 0.04)',
+              color: isActive ? 'white' : 'text.primary',
+            },
+            // Efecto de borde izquierdo al activo
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              left: 0,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '4px',
+              height: '24px',
+              bgcolor: isActive ? 'primary.contrastText' : 'transparent',
+              opacity: isActive ? 1 : 0,
+              transition: 'opacity 0.3',
+            }
+          }}
+        >
+          <ListItemIcon sx={{ color: isActive ? 'white' : 'inherit' }}>
+            <IconComponent fontSize="small" />
+          </ListItemIcon>
+          <ListItemText primary={item.nombre} sx={{ whiteSpace: 'normal' }} />
+          {!isLeaf && (open ? <ExpandLess /> : <ExpandMore />)}
+        </ListItemButton>
+      </ListItem>
+      
+      {!isLeaf && (
+        <Collapse in={open} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {item.children.map((child) => (
+              <MenuItem key={child.id} item={child} depth={depth + 1} />
+            ))}
+          </List>
+        </Collapse>
+      )}
+    </>
+  );
 };
 
 const Sidebar = () => {
-    const { menuTree } = useAuth();
+  const { menuTree, loading, user } = useAuth();
 
+  if (loading) {
     return (
-        <div className="w-64 bg-gray-900 text-white h-screen fixed left-0 top-0 flex flex-col shadow-xl">
-            <div className="h-16 flex items-center justify-center border-b border-gray-700">
-                <h1 className="text-xl font-bold tracking-wider">POS SaaS</h1>
-            </div>
-            
-            <nav className="flex-1 overflow-y-auto py-4">
-                {menuTree && menuTree.length > 0 ? (
-                    menuTree.map(item => (
-                        <MenuItem key={item.id} item={item} />
-                    ))
-                ) : (
-                    <p className="px-4 text-gray-500 text-sm">Cargando menú...</p>
-                )}
-            </nav>
-
-            <div className="p-4 border-t border-gray-700 text-xs text-center text-gray-500">
-                © 2024 Tu Empresa
-            </div>
-        </div>
+      <Box sx={{ width: 256, bgcolor: 'background.paper', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Typography>Cargando...</Typography>
+      </Box>
     );
+  }
+
+  return (
+    <Box sx={{ width: 256, bgcolor: 'background.paper', height: '100vh', borderRight: '1px solid', borderColor: 'divider' }}>
+      <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="h6" noWrap>
+          POS System
+        </Typography>
+      </Box>
+      
+      <List sx={{ py: 0 }}>
+        {menuTree && menuTree.length > 0 ? (
+          menuTree.map((item) => (
+            <MenuItem key={item.id} item={item} />
+          ))
+        ) : (
+          <ListItem>
+            <ListItemText primary="Sin acceso a módulos" secondary="Contacte al administrador." />
+          </ListItem>
+        )}
+      </List>
+
+      <Divider sx={{ mt: 'auto', mb: 0 }} />
+
+      <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
+        <Typography variant="caption" color="text.secondary" align="center">
+          © 2024 Tu Empresa
+        </Typography>
+      </Box>
+    </Box>
+  );
 };
 
 export default Sidebar;
