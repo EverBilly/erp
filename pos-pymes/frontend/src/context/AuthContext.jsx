@@ -1,82 +1,104 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
-import authService from '../services/authService';
-import { buildMenuTree } from '../utils/menuUtils';
+// src/context/AuthContext.js (el archivo corregido que te di)
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { login as loginService, logout as logoutService } from '../services/authService';
 
-const AuthContext = createContext({});
+const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext);
+const authReducer = (state, action) => {
+  switch (action.type) {
+    case 'LOGIN_START':
+      return { ...state, loading: true, error: null };
+    case 'LOGIN_SUCCESS':
+      return { 
+        ...state, 
+        loading: false, 
+        isAuthenticated: true, 
+        user: action.payload.user,
+        menuTree: action.payload.menuTree, // ✅ Asegúrate de guardar menuTree
+        error: null 
+      };
+    case 'LOGIN_FAILURE':
+      return { 
+        ...state, 
+        loading: false, 
+        isAuthenticated: false, 
+        user: null, 
+        menuTree: [],
+        error: action.payload 
+      };
+    case 'LOGOUT':
+      return { 
+        ...state, 
+        isAuthenticated: false, 
+        user: null, 
+        menuTree: [],
+        error: null 
+      };
+    default:
+      return state;
+  }
+};
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [menuTree, setMenuTree] = useState([]);
-
-  // Funcion para cargar el usuario actual desde el token
-  const loadCurrentUser = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const userData = await authService.getCurrentUser();
-      setUser(userData);
-
-      // Cargar y construir el menú
-      const menusFlat = await authService.getMenu();
-      setMenuTree(buildMenuTree(menusFlat));
-
-    } catch (error) { 
-      console.error('Error al cargar usuario actual:', error);
-      authService.logout(); // Limpia si el token es inválido
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [state, dispatch] = useReducer(authReducer, {
+    user: null,
+    menuTree: [], // ✅ Agregado
+    isAuthenticated: false,
+    loading: true,
+    error: null,
+  });
 
   useEffect(() => {
-    loadCurrentUser();
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Opcional: recuperar sesión si hay token
+      // Puedes decidir si hacer login automático o no
+    } else {
+      dispatch({ type: 'LOGIN_FAILURE', payload: null });
+    }
   }, []);
 
-  const login = async (username, password) => {
+  const login = async (credentials) => {
+    dispatch({ type: 'LOGIN_START' });
     try {
-      // 1. Login Normal
-      const userData = await authService.login(username, password);
-      setUser(userData);
-
-      // 2. Cargar y construir el menú
-      const menusFlat = await authService.getMenu();
-      setMenuTree(buildMenuTree(menusFlat));
-
+      const data = await loginService(credentials);
+      dispatch({
+        type: 'LOGIN_SUCCESS',
+        payload: {
+          user: data,
+          menuTree: data.menuTree || []
+        }
+      });
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        message: error.response?.data?.message || 'Error de autenticación' 
-      };
+      dispatch({
+        type: 'LOGIN_FAILURE',
+        payload: error.message || 'Error de autenticación'
+      });
+      return { success: false, message: error.message || 'Error de autenticación' };
     }
   };
 
   const logout = () => {
-    authService.logout();
-    setUser(null);
-    setMenuTree([]); // Limpiar menú al cerrar sesión
-  };
-
-  const value = {
-    user,
-    login,
-    logout,
-    loading,
-    isAuthenticated: !!user,
-    menuTree
+    logoutService();
+    dispatch({ type: 'LOGOUT' });
   };
 
   return (
-    <AuthContext.Provider value={value}>
-      {!loading && children}
+    <AuthContext.Provider value={{
+      ...state,
+      login,
+      logout
+    }}>
+      {children}
     </AuthContext.Provider>
   );
 };
 
-export default AuthContext;
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};

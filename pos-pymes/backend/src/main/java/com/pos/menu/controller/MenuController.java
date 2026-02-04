@@ -16,13 +16,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/usuarios")
+@RequestMapping("/api/menus")
 public class MenuController {
 
     @Autowired
     private MenuService menuService;
 
-    @GetMapping("/menu")
+    @GetMapping
     public ResponseEntity<List<MenuDto>> getMenuActual() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();

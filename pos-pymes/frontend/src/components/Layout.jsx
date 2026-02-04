@@ -19,11 +19,13 @@ import {
   Divider,
   Collapse,
   ListItemButton,
-  CircularProgress
+  CircularProgress,
+  Button
 } from '@mui/material';
 import {
   Menu as MenuIcon,
   Dashboard as DashboardIcon,
+  Home as HomeIcon,
   PointOfSale as PosIcon,
   Inventory as InventoryIcon,
   People as PeopleIcon,
@@ -226,6 +228,17 @@ const Layout = () => {
             sx={{ mr: 1}}
           >
             {desktopOpen ? <MenuIcon/> : <ChevronLeftIcon />}
+          </IconButton>
+
+          {/* ✅ BOTÓN "INICIO" */}
+          <IconButton
+            color="inherit"
+            aria-label="home"
+            edge="start"
+            onClick={() => navigate('/')}
+            sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}
+          >
+            <HomeIcon />
           </IconButton>
 
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>

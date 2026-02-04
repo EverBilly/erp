@@ -15,7 +15,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +76,8 @@ public class UsuarioController {
         throw new IllegalStateException("Usuario no autenticado");
     }
     
+    // ENDPOINTS FIJOS PRIMERO (sin @PathVariable)
+    
     @GetMapping
     @PreAuthorize("hasAuthority('SUPER_ADMIN')")
     public ResponseEntity<List<UsuarioResponse>> getAllUsuarios() {
@@ -87,7 +88,70 @@ public class UsuarioController {
         return ResponseEntity.ok(dtos);
     }
     
-    @GetMapping("/{id}")
+    @GetMapping("/activos")
+    public ResponseEntity<List<UsuarioResponse>> getUsuariosActivos() {
+        List<Usuario> usuariosActivos = usuarioService.findAllByActivoTrue();
+        List<UsuarioResponse> dtos = usuariosActivos.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+    
+    @GetMapping("/buscar")
+    public ResponseEntity<List<UsuarioResponse>> buscarUsuarios(@RequestParam(required = false) String nombre) {
+        List<Usuario> usuarios;
+        if (nombre != null && !nombre.trim().isEmpty()) {
+            usuarios = usuarioService.findByNombreContainingIgnoreCase(nombre);
+        } else {
+            usuarios = usuarioService.findAll();
+        }
+        List<UsuarioResponse> dtos = usuarios.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+    
+    @GetMapping("/estadisticas")
+    public ResponseEntity<Map<String, Object>> getEstadisticas() {
+        long totalUsuarios = usuarioService.findAll().size();
+        long usuariosActivos = usuarioService.countByActivoTrue();
+        
+        Map<String, Object> estadisticas = new HashMap<>();
+        estadisticas.put("totalUsuarios", totalUsuarios);
+        estadisticas.put("usuariosActivos", usuariosActivos);
+        estadisticas.put("usuariosInactivos", totalUsuarios - usuariosActivos);
+        
+        return ResponseEntity.ok(estadisticas);
+    }
+    
+    @GetMapping("/rol/{rolNombre}")
+    public ResponseEntity<List<UsuarioResponse>> getUsuariosPorRol(@PathVariable String rolNombre) {
+        List<Usuario> usuarios = usuarioService.findAllByRole(rolNombre);
+        List<UsuarioResponse> dtos = usuarios.stream()
+            .map(this::convertToDto)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
+    }
+    
+    @GetMapping("/check-username/{username}")
+    public ResponseEntity<Map<String, Boolean>> checkUsername(@PathVariable String username) {
+        boolean existe = usuarioService.existsByUsername(username);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("existe", existe);
+        return ResponseEntity.ok(response);
+    }
+    
+    @GetMapping("/check-email/{email}")
+    public ResponseEntity<Map<String, Boolean>> checkEmail(@PathVariable String email) {
+        boolean existe = usuarioService.existsByEmail(email);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("existe", existe);
+        return ResponseEntity.ok(response);
+    }
+    
+    // ENDPOINTS CON @PATHVARIABLE ÚLTIMO (después de todos los fijos)
+    
+    @GetMapping("/{id}")  // ← ESTE DEBE IR AL FINAL
     public ResponseEntity<?> getUsuarioById(@PathVariable Long id) {
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
@@ -141,7 +205,6 @@ public class UsuarioController {
     
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUsuario(@PathVariable Long id, @Valid @RequestBody ActualizarUsuarioRequest request) {
-        // Cambiado el nombre del path variable a 'id' para evitar conflicto con local
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -207,8 +270,6 @@ public class UsuarioController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUsuario(@PathVariable Long id) {
         // Protección: No borrar al superadmin (ID 1) ni a uno mismo
-        // (Lógica de "no borrarse a sí mismo" suele ir en Service o Frontend, pero aquí está bien)
-
         Long userIdLogueado = obtenerUserIdDelContexto();
         if (id.equals(userIdLogueado)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -255,7 +316,6 @@ public class UsuarioController {
     
     @PatchMapping("/{id}/desactivar")
     public ResponseEntity<?> desactivarUsuario(@PathVariable Long id) {
-
         Long userIdLogueado = obtenerUserIdDelContexto();
         if (id.equals(userIdLogueado)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN)
@@ -278,66 +338,5 @@ public class UsuarioController {
         
         Usuario usuarioActualizado = usuarioService.save(usuario);
         return ResponseEntity.ok(convertToDto(usuarioActualizado));
-    }
-    
-    @GetMapping("/buscar")
-    public ResponseEntity<List<UsuarioResponse>> buscarUsuarios(@RequestParam(required = false) String nombre) {
-        List<Usuario> usuarios;
-        if (nombre != null && !nombre.trim().isEmpty()) {
-            usuarios = usuarioService.findByNombreContainingIgnoreCase(nombre);
-        } else {
-            usuarios = usuarioService.findAll();
-        }
-        List<UsuarioResponse> dtos = usuarios.stream()
-            .map(this::convertToDto)
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
-    
-    @GetMapping("/estadisticas")
-    public ResponseEntity<Map<String, Object>> getEstadisticas() {
-        long totalUsuarios = usuarioService.findAll().size();
-        long usuariosActivos = usuarioService.countByActivoTrue();
-        
-        Map<String, Object> estadisticas = new HashMap<>();
-        estadisticas.put("totalUsuarios", totalUsuarios);
-        estadisticas.put("usuariosActivos", usuariosActivos);
-        estadisticas.put("usuariosInactivos", totalUsuarios - usuariosActivos);
-        
-        return ResponseEntity.ok(estadisticas);
-    }
-    
-    @GetMapping("/activos")
-    public ResponseEntity<List<UsuarioResponse>> getUsuariosActivos() {
-        List<Usuario> usuariosActivos = usuarioService.findAllByActivoTrue();
-        List<UsuarioResponse> dtos = usuariosActivos.stream()
-            .map(this::convertToDto)
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
-    
-    @GetMapping("/rol/{rolNombre}")
-    public ResponseEntity<List<UsuarioResponse>> getUsuariosPorRol(@PathVariable String rolNombre) {
-        List<Usuario> usuarios = usuarioService.findAllByRole(rolNombre);
-        List<UsuarioResponse> dtos = usuarios.stream()
-            .map(this::convertToDto)
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
-    }
-    
-    @GetMapping("/check-username/{username}")
-    public ResponseEntity<Map<String, Boolean>> checkUsername(@PathVariable String username) {
-        boolean existe = usuarioService.existsByUsername(username);
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("existe", existe);
-        return ResponseEntity.ok(response);
-    }
-    
-    @GetMapping("/check-email/{email}")
-    public ResponseEntity<Map<String, Boolean>> checkEmail(@PathVariable String email) {
-        boolean existe = usuarioService.existsByEmail(email);
-        Map<String, Boolean> response = new HashMap<>();
-        response.put("existe", existe);
-        return ResponseEntity.ok(response);
     }
 }

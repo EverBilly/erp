@@ -1,60 +1,34 @@
+// src/services/authService.js
 import api from './api';
 
-const authService = {
-  login: async (username, password) => {
-    const response = await api.post('/auth/login', { username, password });
-    const data = response.data;
+export const login = async (credentials) => {
+  const response = await api.post('/auth/login', credentials);
+  const { token, ...userData } = response.data;
 
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
+  // Guardar token
+  localStorage.setItem('token', token);
 
-      // Ahora cargamos el menu separado
-      const menuResponse = await api.get('/usuarios/menu');
-      const menuData = menuResponse.data;
+  // Cargar menú (CORREGIDO - ahora llama al endpoint correcto)
+  const menuResponse = await api.get('/menus');
+  const menuTree = menuResponse.data;
 
-      // Gurdamos el menu en el user
-      const userWithMenu = { ...data, menus: menuData };
-      localStorage.setItem('user', JSON.stringify(userWithMenu));
-      return userWithMenu;
-    }
-    return data;
-  },
-
-  async getMenu() {
-    try {
-      const response = await api.get('/usuarios/menu');
-      return response.data;
-    } catch (error) {
-      console.error('Error cargando menu:', error);
-      throw error;
-    }
-  },
-
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  },
-
-  getCurrentUser: () => {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      return JSON.parse(userStr);
-    }
-    return null;
-  },
-
-  getAuthHeader: () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      return { Authorization: 'Bearer ' + token };
-    }
-    return {};
-  },
-
-  isAuthenticated: () => {
-    return !!localStorage.getItem('token');
-  }
+  return { token, ...userData, menuTree };
 };
 
-export default authService;
+export const logout = () => {
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+};
+
+export const getCurrentUser = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload;
+  } catch (e) {
+    console.error('Error decodificando token:', e);
+    return null;
+  }
+};

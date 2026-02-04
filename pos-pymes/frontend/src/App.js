@@ -11,6 +11,7 @@ import { NotificationProvider } from './context/NotificationContext';
 
 // Pages
 import Login from './pages/Login';
+import MainMenu from './pages/MainMenu';
 import Dashboard from './pages/Dashboard';
 import UsuariosView from './pages/usuarios/UsuariosView';
 
@@ -34,6 +35,8 @@ function App() {
           <AuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/" element={<PrivateRoute><MainMenu /></PrivateRoute>} />
+              
               <Route
                 element={
                   <PrivateRoute>
@@ -41,9 +44,11 @@ function App() {
                   </PrivateRoute>
                 }
               >
-                <Route index element={<Dashboard />} />
+
+                {/* <Route index element={<Dashboard />} /> */}
                 <Route path="usuarios/*" element={<UsuariosView />} />
               </Route>
+              
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </AuthProvider>

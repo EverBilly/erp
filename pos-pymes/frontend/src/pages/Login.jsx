@@ -26,7 +26,7 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    const result = await login(username, password);
+    const result = await login({username, password});
     
     if (result.success) {
       navigate('/');
