@@ -12,7 +12,8 @@ import {
   CircularProgress,
   Alert,
   IconButton,
-  Tooltip
+  Tooltip,
+  Chip
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -78,11 +79,11 @@ const MainMenu = () => {
   return (
     <Container maxWidth="xl" sx={{ py: 4, minHeight: '100vh' }}>
       <Box sx={{ textAlign: 'center', mb: 6 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
+        <Typography variant="h4" component="h1" gutterBottom sx={{ color: '#333', fontWeight: 600 }}>
           Panel de Control POS
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Selecciona un módulo para comenzar
+          Bienvenido, <strong>{user?.nombre}</strong> • Selecciona un módulo para comenzar
         </Typography>
       </Box>
 
@@ -99,6 +100,8 @@ const MainMenu = () => {
         <Grid container spacing={3}>
           {menus.map((item) => {
             const IconComponent = getIconComponent(item.icono);
+            const categoryColor = getCategoryColor(item.nombre);
+
             return (
               <Grid item xs={12} sm={6} md={3} key={item.id}>
                 <Button
@@ -114,16 +117,16 @@ const MainMenu = () => {
                       justifyContent: 'center',
                       alignItems: 'center',
                       textAlign: 'center',
-                      padding: 2,
-                      borderRadius: '12px',
+                      padding: 3,
+                      borderRadius: '16px',
                       border: `1px solid ${theme.palette.divider}`,
                       bgcolor: theme.palette.background.paper,
                       transition: 'all 0.3s cubic-bezier(0.17, 0.67, 0.88, 1.0)',
                       boxShadow: '0 6px 20px rgba(0,0,0,0.08)',
                       '&:hover': {
-                        transform: 'translateY(-6px) scale(1.02)',
-                        boxShadow: '0 12px 30px rgba(0,0,0,0.12)',
-                        borderColor: getCategoryColor(item.nombre),
+                        transform: 'translateY(-8px) scale(1.03)',
+                        boxShadow: '0 12px 40px rgba(0,0,0,0.15)',
+                        borderColor: categoryColor,
                         bgcolor: theme.palette.action.hover,
                       },
                     },
@@ -132,14 +135,44 @@ const MainMenu = () => {
                     },
                   }}
                 >
-                  <Card sx={{ width: '100%', height: '100%' }}>
+                  <Card sx={{ width: '100%', height: '100%', border: 'none' }}>
                     <CardContent>
-                      <Box sx={{ color: theme.palette.primary.main, mb: 1 }}>
-                        <IconComponent fontSize="large" />
+                      <Box 
+                        sx={{ 
+                          width: 64, 
+                          height: 64, 
+                          borderRadius: '50%',
+                          bgcolor: `${categoryColor}20`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          mb: 2,
+                          mx: 'auto'
+                        }}
+                      >
+                        <IconComponent 
+                          fontSize="large" 
+                          sx={{ color: categoryColor, fontSize: 32 }}
+                        />
                       </Box>
-                      <Typography variant="subtitle1" fontWeight="bold" color="text.primary">
+                      <Typography 
+                        variant="subtitle1" 
+                        fontWeight="bold" 
+                        color="text.primary"
+                        sx={{ mb: 1 }}
+                      >
                         {item.nombre}
                       </Typography>
+                      <Chip
+                        label={item.categoria || 'General'}
+                        size="small"
+                        sx={{
+                          backgroundColor: `${categoryColor}20`,
+                          color: categoryColor,
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                        }}
+                      />
                     </CardContent>
                   </Card>
                 </Button>
@@ -156,6 +189,11 @@ const MainMenu = () => {
           onClick={() => {
             localStorage.removeItem('token');
             navigate('/login');
+          }}
+          sx={{
+            borderRadius: 8,
+            px: 4,
+            py: 1.5
           }}
         >
           CERRAR SESIÓN

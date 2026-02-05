@@ -15,16 +15,8 @@ import MainMenu from './pages/MainMenu';
 import Dashboard from './pages/Dashboard';
 import UsuariosView from './pages/usuarios/UsuariosView';
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-  },
-});
+// Theme
+import { theme } from './theme';
 
 function App() {
   return (

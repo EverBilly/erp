@@ -17,9 +17,15 @@ import {
   Breadcrumbs,
   Link,
   Tooltip,
-  Typography as MuiTypography
+  TextField,
+  InputAdornment,
+  Pagination,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
-import { Edit, Delete, Add, Person as PersonIcon, RestoreFromTrash as RestoreIcon } from '@mui/icons-material'; // <--- Importamos Restore
+import { Edit, Delete, Add, Person as PersonIcon, RestoreFromTrash as RestoreIcon, Search, Visibility } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useNotification } from '../../context/NotificationContext';
@@ -28,9 +34,16 @@ import { useAuth } from '../../context/AuthContext';
 const UsuariosList = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [viewingUser, setViewingUser] = useState(null);
   const navigate = useNavigate();
   const { showNotification } = useNotification();
   const { user } = useAuth();
+
+  const itemsPerPage = 10; // Puedes ajustar esto según tus necesidades
 
   // <--- CARGA INICIAL USUARIOS --->
   const fetchUsuariosList = async () => {
@@ -40,7 +53,21 @@ const UsuariosList = () => {
       const endpoint = isSuperAdmin ? '/usuarios' : '/usuarios/activos';
 
       const response = await api.get(endpoint); 
-      setUsuarios(response.data);
+      const allUsuarios = response.data;
+
+      // Filtrar por búsqueda
+      const filtered = allUsuarios.filter(usuario =>
+        usuario.nombreCompleto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        usuario.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        usuario.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      // Paginar resultados
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const paginated = filtered.slice(startIndex, startIndex + itemsPerPage);
+
+      setUsuarios(paginated);
+      setTotalPages(Math.ceil(filtered.length / itemsPerPage));
     } catch (error) {
       console.error('Error al cargar usuarios:', error);
       showNotification('Error al cargar usuarios', 'error');
@@ -49,6 +76,13 @@ const UsuariosList = () => {
     }
   };
 
+  useEffect(() => {
+    if(user) {
+      fetchUsuariosList();
+    }
+  }, [showNotification, user, searchTerm, currentPage]);
+
+  // <--- FUNCIÓN DE DESACTIVACIÓN (Para usuarios activos) --->
   const handleDelete = async (id, nombre) => {
     if (window.confirm(`¿Estás seguro de DESACTIVAR al usuario ${nombre}?`)) {
       try {
@@ -74,13 +108,37 @@ const UsuariosList = () => {
       }
     }
   };
-  
-  useEffect(() => {
-    if(user) {
-      fetchUsuariosList();
+
+  const handleView = (usuario) => {
+    setViewingUser(usuario);
+    setShowViewModal(true);
+  };
+
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value);
+    setCurrentPage(1); // Resetear a primera página al buscar
+  };
+
+  const getRoleColor = (rol) => {
+    switch (rol) {
+      case 'SUPER_ADMIN':
+        return 'error';
+      case 'ADMIN':
+        return 'warning';
+      case 'USER':
+        return 'info';
+      default:
+        return 'default';
     }
-  }, [showNotification, user]);
-  
+  };
+
+  const getStatusColor = (activo) => {
+    return activo ? 'success' : 'default';
+  };
+
+  const getStatusLabel = (activo) => {
+    return activo ? 'Activo' : 'Inactivo';
+  };
 
   if (loading) {
     // Skeletons para que se vea bonito mientras carga
@@ -97,98 +155,215 @@ const UsuariosList = () => {
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
         {/* <--- CABECERA Y NAVEGACIÓN --->*/}
-        <Paper elevation={2} sx={{ p: 2, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Paper elevation={2} sx={{ p: 3, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 2 }}>
           <Box>
-            <Typography variant="h4" sx={{ mb: 0.5 }}>Gestión de Usuarios</Typography>
-            <Typography variant="body2" color="text.secondary">Solo usuarios activos</Typography>
+            <Typography variant="h4" sx={{ mb: 0.5, fontWeight: 600 }}>Gestión de Usuarios</Typography>
+            <Typography variant="body2" color="text.secondary">Administración de cuentas de usuario</Typography>
           </Box>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => navigate('/usuarios/nuevo')}
-          >
-            Nuevo Usuario
-          </Button>
+          
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <TextField
+              placeholder="Buscar usuarios..."
+              variant="outlined"
+              size="small"
+              value={searchTerm}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{ minWidth: 250 }}
+            />
+            
+            <Button
+              variant="contained"
+              startIcon={<Add />}
+              onClick={() => navigate('/usuarios/nuevo')}
+              sx={{
+                backgroundColor: '#1976d2',
+                '&:hover': {
+                  backgroundColor: '#1565c0',
+                }
+              }}
+            >
+              Nuevo Usuario
+            </Button>
+          </Box>
         </Paper>
 
         {/* TABLA DE USUARIOS */}
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Usuario</TableCell>
-                <TableCell>Nombre</TableCell>
-                <TableCell>Email</TableCell>
-                <TableCell>Estado</TableCell>
-                <TableCell>Acciones</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {usuarios.map((usuario) => (
-                <TableRow key={usuario.id}>
-                  <TableCell>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <PersonIcon color="primary" />
-                      <strong>{usuario.username}</strong>
-                    </Box>
-                  </TableCell>
-                  <TableCell>{usuario.nombreCompleto}</TableCell>
-                  <TableCell>{usuario.email}</TableCell>
-                  <TableCell>
-                    <Chip
-                        label={usuario.activo ? 'Activo' : 'Inactivo'}
-                        color={usuario.activo ? 'success' : 'default'}
+        <Paper elevation={2} sx={{ borderRadius: 2 }}>
+          <TableContainer>
+            <Table>
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Usuario</TableCell>
+                  <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Nombre</TableCell>
+                  <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Email</TableCell>
+                  <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Rol</TableCell>
+                  <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Estado</TableCell>
+                  <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa', textAlign: 'right' }}>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {usuarios.map((usuario) => (
+                  <TableRow 
+                    key={usuario.id}
+                    sx={{ 
+                      '&:nth-of-type(even)': { backgroundColor: '#fafafa' },
+                      '&:hover': { backgroundColor: '#f0f8ff' }
+                    }}
+                  >
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <PersonIcon color="primary" />
+                        <strong>{usuario.username}</strong>
+                      </Box>
+                    </TableCell>
+                    <TableCell>{usuario.nombreCompleto}</TableCell>
+                    <TableCell>{usuario.email}</TableCell>
+                    <TableCell>
+                      <Chip
+                        label={usuario.roles?.[0]?.nombre || 'Sin rol'}
+                        color={getRoleColor(usuario.roles?.[0]?.nombre)}
                         size="small"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {/* <--- LÓGICA INTELIGENTE DE BOTONES --->*/}
-                    {/* Si usuario es SUPERADMIN (ID 1), no mostrar botones */}
-                    {usuario.username !== 'superadmin' && usuario.id !== user?.id  ? (
-                      <>
-                        <Tooltip title="Editar">
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        label={getStatusLabel(usuario.activo)}
+                        color={getStatusColor(usuario.activo)}
+                        size="small"
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                        <Tooltip title="Ver detalles">
                           <IconButton
-                            onClick={() => navigate(`/usuarios/editar/${usuario.id}`)}
-                            color="primary"
+                            onClick={() => handleView(usuario)}
+                            size="small"
+                            sx={{ color: 'info.main' }}
                           >
-                            <Edit />
+                            <Visibility />
                           </IconButton>
                         </Tooltip>
 
-                        {/* Si está ACTIVO, mostrar Borrar (Desactivar) */}
-                        {usuario.activo ? (
-                          <Tooltip title="Desactivar">
-                            <IconButton
-                              onClick={() => handleDelete(usuario.id, usuario.username)}
-                              color="error"
-                            >
-                              <Delete />
-                            </IconButton>
-                          </Tooltip>
+                        {/* <--- LÓGICA INTELIGENTE DE BOTONES --->*/}
+                        {/* Si usuario es SUPERADMIN (ID 1), no mostrar botones */}
+                        {usuario.username !== 'superadmin' && usuario.id !== user?.id ? (
+                          <>
+                            <Tooltip title="Editar">
+                              <IconButton
+                                onClick={() => navigate(`/usuarios/editar/${usuario.id}`)}
+                                size="small"
+                                sx={{ color: 'primary.main' }}
+                              >
+                                <Edit />
+                              </IconButton>
+                            </Tooltip>
+
+                            {/* Si está ACTIVO, mostrar Borrar (Desactivar) */}
+                            {usuario.activo ? (
+                              <Tooltip title="Desactivar">
+                                <IconButton
+                                  onClick={() => handleDelete(usuario.id, usuario.username)}
+                                  size="small"
+                                  sx={{ color: 'error.main' }}
+                                >
+                                  <Delete />
+                                </IconButton>
+                              </Tooltip>
+                            ) : (
+                              /* Si está INACTIVO, mostrar Activar (Restaurar) */
+                              <Tooltip title="Reactivar Usuario">
+                                <IconButton
+                                  onClick={() => handleRestore(usuario.id, usuario.username)}
+                                  size="small"
+                                  sx={{ color: 'success.main' }}
+                                >
+                                  <RestoreIcon />
+                                </IconButton>
+                              </Tooltip>
+                            )}
+                          </>
                         ) : (
-                          /* Si está INACTIVO, mostrar Activar (Restaurar) */
-                          <Tooltip title="Reactivar Usuario">
-                            <IconButton
-                              onClick={() => handleRestore(usuario.id, usuario.username)}
-                              color="success"
-                            >
-                              <RestoreIcon />
-                            </IconButton>
-                          </Tooltip>
+                          <Typography variant="caption" color="textSecondary">
+                            {usuario.id === user?.id ? '(Tu cuenta)' : '(Protegido)'}
+                          </Typography>
                         )}
-                      </>
-                    ) : (
-                      <Typography variant="caption" color="textSecondary">
-                        {usuario.id === user?.id ? '(Tu cuenta)' : '(Protegido)'}
-                      </Typography>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+          
+          {totalPages > 1 && (
+            <Box sx={{ p: 2, display: 'flex', justifyContent: 'center' }}>
+              <Pagination
+                count={totalPages}
+                page={currentPage}
+                onChange={(event, value) => setCurrentPage(value)}
+                color="primary"
+              />
+            </Box>
+          )}
+        </Paper>
       </Box>
+
+      {/* Modal de vista detallada */}
+      <Dialog 
+        open={showViewModal} 
+        onClose={() => setShowViewModal(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Detalles del Usuario</DialogTitle>
+        <DialogContent>
+          {viewingUser && (
+            <Box sx={{ py: 2 }}>
+              <Typography variant="subtitle2">Nombre de Usuario:</Typography>
+              <Typography variant="body1" sx={{ mb: 2, fontWeight: 600 }}>{viewingUser.username}</Typography>
+              
+              <Typography variant="subtitle2">Nombre Completo:</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingUser.nombreCompleto}</Typography>
+              
+              <Typography variant="subtitle2">Email:</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingUser.email}</Typography>
+              
+              <Typography variant="subtitle2">Rol:</Typography>
+              <Chip
+                label={viewingUser.roles?.[0]?.nombre || 'Sin rol'}
+                color={getRoleColor(viewingUser.roles?.[0]?.nombre)}
+                variant="outlined"
+                sx={{ mb: 2 }}
+              />
+              
+              <Typography variant="subtitle2">Estado:</Typography>
+              <Chip
+                label={getStatusLabel(viewingUser.activo)}
+                color={getStatusColor(viewingUser.activo)}
+                variant="outlined"
+                sx={{ mb: 2 }}
+              />
+              
+              <Typography variant="subtitle2">Fecha de Creación:</Typography>
+              <Typography variant="body1">
+                {viewingUser.fechaCreacion ? new Date(viewingUser.fechaCreacion).toLocaleString() : 'No disponible'}
+              </Typography>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowViewModal(false)}>Cerrar</Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

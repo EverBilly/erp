@@ -12,7 +12,8 @@ import {
     Collapse,
     Typography,
     IconButton,
-    Tooltip
+    Tooltip,
+    Avatar
 } from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { getIconComponent } from '../utils/iconMapper';
@@ -26,14 +27,11 @@ const MenuItem = ({ item, depth = 0 }) => {
     
     const handleClick = () => {
         if (!isLeaf) {
-            // Navegar si es hoja
-        } else {
-            // Si no es hoja, expandir/colapsar
-            setOpen(!open);
+          setOpen(!open);
         }
     };
     
-    const paddingLeft = depth * 16;
+    const paddingLeft = 24 + (depth * 16);
     const IconComponent = getIconComponent(item.icono);
 
   return (
@@ -48,28 +46,25 @@ const MenuItem = ({ item, depth = 0 }) => {
             backgroundColor: isActive ? 'primary.main' : 'transparent',
             color: isActive ? 'white' : 'inherit',
             '&:hover': {
-              backgroundColor: isActive ? 'primary.dark' : 'rgba(0, 0, 0, 0.04)',
+              backgroundColor: isActive ? 'primary.dark' : 'action.hover',
               color: isActive ? 'white' : 'text.primary',
             },
-            // Efecto de borde izquierdo al activo
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              left: 0,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: '4px',
-              height: '24px',
-              bgcolor: isActive ? 'primary.contrastText' : 'transparent',
-              opacity: isActive ? 1 : 0,
-              transition: 'opacity 0.3',
-            }
+            borderRadius: 2,
+            mx: 1,
+            mb: 0.5,
           }}
         >
           <ListItemIcon sx={{ color: isActive ? 'white' : 'inherit' }}>
             <IconComponent fontSize="small" />
           </ListItemIcon>
-          <ListItemText primary={item.nombre} sx={{ whiteSpace: 'normal' }} />
+          <ListItemText 
+            primary={item.nombre} 
+            sx={{ 
+              whiteSpace: 'normal',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }} 
+          />
           {!isLeaf && (open ? <ExpandLess /> : <ExpandMore />)}
         </ListItemButton>
       </ListItem>
@@ -98,12 +93,42 @@ const Sidebar = () => {
     );
   }
 
+  // Obtener el rol del usuario de forma más robusta
+  const getUserRole = () => {
+    if (user?.rol) return user.rol;
+    if (user?.role) return user.role;
+    if (user?.roles && Array.isArray(user.roles) && user.roles.length > 0) {
+      return user.roles[0].authority || user.roles[0].nombre;
+    }
+    return 'Rol no definido';
+  };
+
+  const userRole = getUserRole();
+
   return (
     <Box sx={{ width: 256, bgcolor: 'background.paper', height: '100vh', borderRight: '1px solid', borderColor: 'divider' }}>
-      <Box sx={{ p: 2, borderBottom: '1px solid', borderColor: 'divider' }}>
-        <Typography variant="h6" noWrap>
-          POS System
-        </Typography>
+      <Box 
+        sx={{ 
+          p: 2, 
+          borderBottom: '1px solid', 
+          borderColor: 'divider',
+          bgcolor: 'primary.light',
+          color: 'white'
+          }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+          <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
+            {user?.nombre?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
+          </Avatar>
+          <Box>
+            <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
+              {user?.nombre || user?.username || 'Usuario'}
+            </Typography>
+            <Typography variant="caption" sx={{ opacity: 0.9 }}>
+              {userRole}
+            </Typography>
+          </Box>
+        </Box>
       </Box>
       
       <List sx={{ py: 0 }}>
@@ -113,7 +138,10 @@ const Sidebar = () => {
           ))
         ) : (
           <ListItem>
-            <ListItemText primary="Sin acceso a módulos" secondary="Contacte al administrador." />
+            <ListItemText 
+              primary="Sin acceso a módulos" 
+              secondary="Contacte al administrador." 
+              sx={{ textAlign: 'center' }}/>
           </ListItem>
         )}
       </List>
@@ -122,7 +150,7 @@ const Sidebar = () => {
 
       <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
         <Typography variant="caption" color="text.secondary" align="center">
-          © 2024 Tu Empresa
+          © 2026 POS SYSTEM
         </Typography>
       </Box>
     </Box>

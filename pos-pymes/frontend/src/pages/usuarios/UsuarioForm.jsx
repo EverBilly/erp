@@ -14,7 +14,11 @@ import {
   Link,
   Alert,
   FormControlLabel,
-  Autocomplete
+  Switch,
+  Autocomplete,
+  Card,
+  CardContent,
+  CardHeader
 } from '@mui/material';
 import { Formik, Form, Field } from 'formik';
 import * as Yup from 'yup';
@@ -27,7 +31,11 @@ const usuarioSchema = Yup.object().shape({
   email: Yup.string().email('Email inválido').required('Requerido'),
   nombreCompleto: Yup.string().required('Requerido'),
   roleIds: Yup.array().min(1, 'Selecciona al menos un rol'),
-  password: Yup.string().min(6, 'Mínimo 6 caracteres')
+  password: Yup.string().when('isEditing', {
+    is: false,
+    then: (schema) => schema.required('Requerido').min(6, 'Mínimo 6 caracteres'),
+    otherwise: (schema) => schema.min(6, 'Mínimo 6 caracteres'),
+  }),
 });
 
 const UsuarioForm = () => {
@@ -42,6 +50,7 @@ const UsuarioForm = () => {
   const [loadingRoles, setLoadingRoles] = useState(true);
   const [loadingFetch, setLoadingFetch] = useState(isEdit);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [initialValuesForm, setInitialValuesForm] = useState({
     username: '',
@@ -50,7 +59,8 @@ const UsuarioForm = () => {
     telefono: '',
     activo: true,
     password: '',
-    roleIds: []
+    roleIds: [],
+    isEditing: isEdit
   });
 
   // Cargar Roles al montar
@@ -88,7 +98,8 @@ const UsuarioForm = () => {
             telefono: userData.telefono,
             activo: userData.activo,
             roleIds: roleIds,
-            password: ''
+            password: '',
+            isEditing: true
           });
         } catch (err) {
           console.error("Error al cargar usuario", err);
@@ -109,13 +120,18 @@ const UsuarioForm = () => {
       // Agregar asignadoPor con el ID del usuario logueado
       payload.asignadoPor = user.id;
 
+      // Eliminar el campo isEditing antes del payload
+      delete payload.isEditing;
+
       if (isEdit) {
+        // Si no se proporciona contraseña, no la incluimos en el payload
         if (!payload.password?.trim()) {
           delete payload.password;
         }
         await api.put(`/usuarios/${id}`, payload);
         showNotification('Usuario actualizado correctamente', 'success');
       } else {
+        // Para nuevo usuario, la contraseña es obligatoria
         if (!payload.password?.trim()) {
           throw new Error('La contraseña es requerida');
         }
@@ -147,196 +163,267 @@ const UsuarioForm = () => {
   }
 
   return (
-    <Container maxWidth="md">
+    <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        <Paper elevation={3} sx={{ p: 3 }}>
-          <Typography variant="h5" gutterBottom>
-            {isEdit ? 'Editar Usuario' : 'Nuevo Usuario'}
-          </Typography>
+        <Card sx={{ borderRadius: 2, boxShadow: 2 }}>
+          <CardHeader
+            title={isEdit ? 'Editar Usuario' : 'Nuevo Usuario'}
+            subheader={isEdit ? 'Modifica la información del usuario' : 'Crea un nuevo usuario para el sistema'}
+            sx={{ 
+              backgroundColor: 'primary.light',
+              color: 'white',
+              borderRadius: '8px 8px 0 0'
+            }}
+          />
+          <CardContent>
+            {/* Navegación */}
+            <Box sx={{ mb: 3 }}>
+              <Breadcrumbs aria-label="breadcrumb">
+                <Link underline="hover" color="inherit" href="/">
+                  <Typography sx={{ fontWeight: 'bold' }}>Inicio</Typography>
+                </Link>
+                <Link underline="hover" color="inherit" href="/usuarios">
+                  <Typography color="text.primary">Usuarios</Typography>
+                </Link>
+                <Typography color="text.primary">{isEdit ? 'Editar' : 'Nuevo'}</Typography>
+              </Breadcrumbs>
+            </Box>
 
-          {/* Navegación */}
-          <Box sx={{ mb: 2 }}>
-            <Breadcrumbs aria-label="breadcrumb">
-              <Link underline="hover" color="inherit" href="/">
-                <Typography sx={{ fontWeight: 'bold' }}>Inicio</Typography>
-              </Link>
-              <Link underline="hover" color="inherit" href="/usuarios">
-                <Typography color="text.primary">Usuarios</Typography>
-              </Link>
-              <Typography color="text.primary">{isEdit ? 'Editar' : 'Nuevo'}</Typography>
-            </Breadcrumbs>
-          </Box>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            <Formik
+              initialValues={initialValuesForm}
+              validationSchema={usuarioSchema}
+              onSubmit={handleSubmit}
+              enableReinitialize={true}
+            >
+              {({ values, errors, touched, setFieldValue, isSubmitting }) => {
+                // Calcular availableRoles en cada render
+                const isSuperAdmin = user?.roles?.some(r => r.authority === 'SUPER_ADMIN');
+                const availableRoles = roles.filter(role => {
+                  if (role.nombre === 'SUPER_ADMIN' && !isSuperAdmin) {
+                    return false;
+                  }
+                  return true;
+                });
 
-          <Formik
-            initialValues={initialValuesForm}
-            validationSchema={usuarioSchema}
-            onSubmit={handleSubmit}
-            enableReinitialize={true}
-          >
-            {({ values, errors, touched, setFieldValue, isSubmitting }) => {
-              // Calcular availableRoles en cada render
-              const isSuperAdmin = user?.roles?.some(r => r.authority === 'SUPER_ADMIN');
-              const availableRoles = roles.filter(role => {
-                if (role.nombre === 'SUPER_ADMIN' && !isSuperAdmin) {
-                  return false;
-                }
-                return true;
-              });
+                const validRoleIds = values.roleIds.filter(id => 
+                  availableRoles.some(role => role.id === id)
+                );
 
-              const validRoleIds = values.roleIds.filter(id => 
-                availableRoles.some(role => role.id === id)
-              );
+                return (
+                  <Form>
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} sm={6}>
+                        <Field name="username">
+                          {({ field }) => (
+                            <TextField
+                              {...field}
+                              label="Nombre de usuario"
+                              fullWidth
+                              error={touched.username && !!errors.username}
+                              helperText={touched.username && errors.username}
+                              disabled={isEdit}
+                              variant="outlined"
+                              size="small"
+                              sx={{ mb: 2 }}
+                            />
+                          )}
+                        </Field>
+                      </Grid>
 
-              return (
-                <Form>
-                  <Grid container spacing={2}>
-                    <Grid item xs={12} sm={6}>
-                      <Field name="username">
-                        {({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Nombre de usuario"
-                            fullWidth
-                            error={touched.username && !!errors.username}
-                            helperText={touched.username && errors.username}
-                            disabled={isEdit}
-                          />
-                        )}
-                      </Field>
-                    </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Field name="email">
+                          {({ field }) => (
+                            <TextField
+                              {...field}
+                              label="Email"
+                              type="email"
+                              fullWidth
+                              error={touched.email && !!errors.email}
+                              helperText={touched.email && errors.email}
+                              variant="outlined"
+                              size="small"
+                              sx={{ mb: 2 }}
+                            />
+                          )}
+                        </Field>
+                      </Grid>
 
-                    <Grid item xs={12} sm={6}>
-                      <Field name="email">
-                        {({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Email"
-                            type="email"
-                            fullWidth
-                            error={touched.email && !!errors.email}
-                            helperText={touched.email && errors.email}
-                          />
-                        )}
-                      </Field>
-                    </Grid>
+                      <Grid item xs={12}>
+                        <Field name="nombreCompleto">
+                          {({ field }) => (
+                            <TextField
+                              {...field}
+                              label="Nombre completo"
+                              fullWidth
+                              error={touched.nombreCompleto && !!errors.nombreCompleto}
+                              helperText={touched.nombreCompleto && errors.nombreCompleto}
+                              variant="outlined"
+                              size="small"
+                              sx={{ mb: 2 }}
+                            />
+                          )}
+                        </Field>
+                      </Grid>
 
-                    <Grid item xs={12}>
-                      <Field name="nombreCompleto">
-                        {({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Nombre completo"
-                            fullWidth
-                            error={touched.nombreCompleto && !!errors.nombreCompleto}
-                            helperText={touched.nombreCompleto && errors.nombreCompleto}
-                          />
-                        )}
-                      </Field>
-                    </Grid>
+                      <Grid item xs={12} sm={6}>
+                        <Field name="telefono">
+                          {({ field }) => (
+                            <TextField
+                              {...field}
+                              label="Teléfono"
+                              fullWidth
+                              variant="outlined"
+                              size="small"
+                              sx={{ mb: 2 }}
+                            />
+                          )}
+                        </Field>
+                      </Grid>
 
-                    <Grid item xs={12} sm={6}>
-                      <Field name="telefono">
-                        {({ field }) => (
-                          <TextField
-                            {...field}
-                            label="Teléfono"
-                            fullWidth
-                          />
-                        )}
-                      </Field>
-                    </Grid>
-
-                    <Grid item xs={12} sm={6}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+                      <Grid item xs={12} sm={6}>
                         <Field name="activo">
                           {({ field }) => (
                             <FormControlLabel
                               control={
-                                <input
-                                  type="checkbox"
+                                <Switch
                                   checked={field.value}
                                   onChange={(e) => setFieldValue('activo', e.target.checked)}
-                                  style={{ width: 20, height: 20 }}
+                                  color="primary"
                                 />
                               }
                               label="Usuario Activo"
                             />
                           )}
                         </Field>
-                      </Box>
-                    </Grid>
+                      </Grid>
 
-                    {!isEdit && (
+                      {!isEdit ? (
+                        <Grid item xs={12}>
+                          <Field name="password">
+                            {({ field }) => (
+                              <TextField
+                                {...field}
+                                label="Contraseña"
+                                type={showPassword ? "text" : "password"}
+                                fullWidth
+                                error={touched.password && !!errors.password}
+                                helperText={touched.password && errors.password}
+                                variant="outlined"
+                                size="small"
+                                sx={{ mb: 2 }}
+                              />
+                            )}
+                          </Field>
+                        </Grid>
+                      ) : (
+                        <Grid item xs={12}>
+                          <Field name="password">
+                            {({ field }) => (
+                              <TextField
+                                {...field}
+                                label="Nueva Contraseña (opcional)"
+                                type={showPassword ? "text" : "password"}
+                                fullWidth
+                                error={touched.password && !!errors.password}
+                                helperText={touched.password && errors.password || "Dejar vacío para mantener la contraseña actual"}
+                                variant="outlined"
+                                size="small"
+                                sx={{ mb: 2 }}
+                              />
+                            )}
+                          </Field>
+                        </Grid>
+                      )}
+
                       <Grid item xs={12}>
-                        <Field name="password">
-                          {({ field }) => (
+                        <FormControlLabel
+                          control={
+                            <Switch
+                              checked={showPassword}
+                              onChange={(e) => setShowPassword(e.target.checked)}
+                              color="primary"
+                            />
+                          }
+                          label="Mostrar contraseña"
+                        />
+                      </Grid>
+
+                      {/* Selector de Roles con Autocomplete */}
+                      <Grid item xs={12}>
+                        <Autocomplete
+                          multiple
+                          options={availableRoles}
+                          getOptionLabel={(option) => option.nombre}
+                          value={availableRoles.filter(role => 
+                            validRoleIds.includes(role.id)
+                          )}
+                          onChange={(event, newValue) => {
+                            setFieldValue('roleIds', newValue.map(role => role.id));
+                          }}
+                          renderInput={(params) => (
                             <TextField
-                              {...field}
-                              label="Contraseña"
-                              type="password"
-                              fullWidth
-                              error={touched.password && !!errors.password}
-                              helperText={touched.password && errors.password}
+                              {...params}
+                              label="Asignar Roles"
+                              error={touched.roleIds && !!errors.roleIds}
+                              helperText={touched.roleIds && errors.roleIds}
+                              variant="outlined"
+                              size="small"
                             />
                           )}
-                        </Field>
+                          renderTags={(value, getTagProps) =>
+                            value.map((option, index) => (
+                              <Chip
+                                key={option.id}
+                                label={option.nombre}
+                                {...getTagProps({ index })}
+                                size="small"
+                                sx={{ mr: 0.5, mb: 0.5 }}
+                              />
+                            ))
+                          }
+                          sx={{ mb: 2 }}
+                        />
                       </Grid>
-                    )}
 
-                    {/* Selector de Roles con Autocomplete */}
-                    <Grid item xs={12}>
-                      <Autocomplete
-                        multiple
-                        options={availableRoles}
-                        getOptionLabel={(option) => option.nombre}
-                        value={availableRoles.filter(role => 
-                          validRoleIds.includes(role.id)
-                        )}
-                        onChange={(event, newValue) => {
-                          setFieldValue('roleIds', newValue.map(role => role.id));
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params}
-                            label="Asignar Roles"
-                            error={touched.roleIds && !!errors.roleIds}
-                            helperText={touched.roleIds && errors.roleIds}
-                          />
-                        )}
-                        renderTags={(value, getTagProps) =>
-                          value.map((option, index) => (
-                            <Chip
-                              key={option.id}
-                              label={option.nombre}
-                              {...getTagProps({ index })}
-                            />
-                          ))
-                        }
-                      />
+                      <Grid item xs={12}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
+                          <Button 
+                            onClick={() => navigate('/usuarios')}
+                            variant="outlined"
+                            size="large"
+                          >
+                            Cancelar
+                          </Button>
+                          <Button
+                            type="submit"
+                            variant="contained"
+                            disabled={isSubmitting}
+                            size="large"
+                            sx={{
+                              backgroundColor: '#1976d2',
+                              '&:hover': {
+                                backgroundColor: '#1565c0',
+                              }
+                            }}
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <CircularProgress size={20} sx={{ mr: 1 }} />
+                                Guardando...
+                              </>
+                            ) : (isEdit ? 'Actualizar Usuario' : 'Crear Usuario')}
+                          </Button>
+                        </Box>
+                      </Grid>
                     </Grid>
-
-                    <Grid item xs={12}>
-                      <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
-                        <Button onClick={() => navigate('/usuarios')}>
-                          Cancelar
-                        </Button>
-                        <Button
-                          type="submit"
-                          variant="contained"
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? 'Guardando...' : (isEdit ? 'Actualizar' : 'Crear')}
-                        </Button>
-                      </Box>
-                    </Grid>
-                  </Grid>
-                </Form>
-              );
-            }}
-          </Formik>
-        </Paper>
+                  </Form>
+                );
+              }}
+            </Formik>
+          </CardContent>
+        </Card>
       </Box>
     </Container>
   );
