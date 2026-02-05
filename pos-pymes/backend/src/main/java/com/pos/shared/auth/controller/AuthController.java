@@ -3,17 +3,14 @@ package com.pos.shared.auth.controller;
 import com.pos.shared.auth.dto.LoginRequest;
 import com.pos.shared.auth.dto.LoginResponse;
 import com.pos.shared.auth.service.AuthService;
-import com.pos.rol.model.Rol;
 import com.pos.usuario.model.Usuario;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;;
-import org.springframework.security.core.context.SecurityContextHolder;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
+
 import java.util.Map;
 
 
@@ -34,21 +31,30 @@ public class AuthController {
             LoginResponse response = authService.authenticateUser(loginRequest);
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
-                "error", "Error en autenticación", "message", e.getMessage()));
+            // Loggear el error para debugging
+            System.out.println("Error de autenticación: " + e.getMessage());
+            e.printStackTrace();
+            
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of(
+                "error", "Credenciales inválidas", "message", e.getMessage()));
         }
     }
 
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         // La lógica de logout se maneja en el cliente eliminando el token
-        return ResponseEntity.ok("Logout exitoso");
+        SecurityContextHolder.clearContext();
+        return ResponseEntity.ok(Map.of("message", "Logout exitoso"));
     }
     
     @GetMapping("/validate")
     public ResponseEntity<?> validateToken(@RequestParam String token) {
-        // La validación se hace en el filtro JWT
-        return ResponseEntity.ok("Token válido");
+        try {
+            // La validación se haría en el filtro JWT, pero puedes implementar lógica adicional aquí
+            return ResponseEntity.ok(Map.of("valid", true, "message", "Token válido"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("valid", false, "message", "Token inválido"));
+        }
     }
 
     @GetMapping("/health")

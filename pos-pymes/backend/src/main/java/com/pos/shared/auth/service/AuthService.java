@@ -6,7 +6,6 @@ import com.pos.shared.security.JwtTokenProvider;
 import com.pos.shared.security.UserPrincipal;
 import com.pos.usuario.model.Usuario;
 import com.pos.usuario.repository.UsuarioRepository;
-import com.pos.rol.model.Rol;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -15,9 +14,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -56,21 +52,23 @@ public class AuthService {
         usuario.setUltimoLogin(LocalDateTime.now());
         usuarioRepository.save(usuario);
         
-        // 5. Crear autenticación simple
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-            usuario.getUsername(),
-            null  // credentials null porque ya verificamos la contraseña
-        );
-        
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        
-        // 6. Generar token JWT
-        String jwt = tokenProvider.generateTokenFromUsername(usuario.getUsername());
-        
-        // 7. Crear UserPrincipal para la respuesta
+        // 5. Crear UserPrincipal para la autenticación
         UserPrincipal userPrincipal = UserPrincipal.create(usuario);
 
-        // 8. Crear y devolver respuesta
+        // 6. Crear autenticación
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+            userPrincipal,
+            null,  // credentials null porque ya verificamos la contraseña
+            userPrincipal.getAuthorities()
+        );
+        
+        // 7. Establecer autenticación en el contexto de seguridad
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        
+        // 8. Generar token JWT
+        String jwt = tokenProvider.generateTokenFromUsername(userPrincipal.getUsername());
+
+        // 9. Crear y devolver respuesta
         return new LoginResponse(
             jwt,
             "Bearer",
@@ -81,12 +79,4 @@ public class AuthService {
             userPrincipal.getAuthorities()
         );
     }
-
-    // public boolean validatePassword(String rawPassword, String encodedPassword) {
-    //     return passwordEncoder.matches(rawPassword, encodedPassword);
-    // }
-    
-    // public String encodePassword(String rawPassword) {
-    //     return passwordEncoder.encode(rawPassword);
-    // }
 }

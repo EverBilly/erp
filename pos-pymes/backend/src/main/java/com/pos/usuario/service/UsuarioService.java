@@ -49,7 +49,9 @@ public class UsuarioService {
         }
         
         if (usuario.getPasswordHash() != null && !usuario.getPasswordHash().isEmpty()) {
-            usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
+            if (!usuario.getPasswordHash().startsWith("$2a$")) { 
+                usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
+            }
         }
         
         return usuarioRepository.save(usuario);
