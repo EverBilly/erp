@@ -8,6 +8,7 @@ import com.pos.usuario.dto.UsuarioResponse;
 import com.pos.usuario.dto.CrearUsuarioRequest;
 import com.pos.usuario.dto.ActualizarUsuarioRequest;
 import com.pos.rol.repository.RolRepository;
+import com.pos.usuario.dto.RolDisplayDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -39,6 +40,43 @@ public class UsuarioController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // Método auxiliar para convertir Rol a RolDisplayDto (dinámico)
+    private RolDisplayDto convertRolToDisplayDto(Rol rol) {
+        String displayName = rol.getDescripcion() != null && !rol.getDescripcion().trim().isEmpty() 
+            ? rol.getDescripcion() 
+            : rol.getNombre();
+            
+        String color = getRoleColor(rol.getNombre()); // Asignar color dinámicamente
+        
+        return new RolDisplayDto(
+            rol.getNombre(),
+            displayName,
+            rol.getDescripcion() != null ? rol.getDescripcion() : "Sin descripción",
+            color,
+            rol.getNivelPrioridad()
+        );
+    }
+
+    // Método para asignar colores dinámicamente basado en nivel de prioridad
+    private String getRoleColor(String nombreRol) {
+        // Podríamos también basarlo en nivel de prioridad
+        if ("SUPER_ADMIN".equals(nombreRol)) return "error";
+        if ("ADMIN".equals(nombreRol)) return "warning";
+        if ("USER".equals(nombreRol)) return "info";
+        
+        // Para roles personalizados, basar en nivel de prioridad
+        Optional<Rol> rolOpt = rolRepository.findByNombre(nombreRol);
+        if (rolOpt.isPresent()) {
+            Integer prioridad = rolOpt.get().getNivelPrioridad();
+            if (prioridad != null) {
+                if (prioridad >= 900) return "error";      // Rojo para altos privilegios
+                if (prioridad >= 500) return "warning";    // Amarillo para medio
+                if (prioridad > 0) return "info";          // Azul para bajos
+            }
+        }
+        return "default"; // Gris para roles sin prioridad
+    }
+
     // Método auxiliar para convertir Usuario a UsuarioResponse
     private UsuarioResponse convertToDto(Usuario usuario) {
         UsuarioResponse dto = new UsuarioResponse();
@@ -51,16 +89,11 @@ public class UsuarioController {
         dto.setFechaCreacion(usuario.getFechaCreacion());
         dto.setUltimoLogin(usuario.getUltimoLogin());
         
-        // Extraer solo los nombres de los roles
-        List<Map<String, Object>> nombresRoles = usuario.getRoles().stream()
-            .map(rol -> {
-                Map<String, Object> rolMap = new HashMap<>();
-                rolMap.put("id", rol.getId());
-                rolMap.put("nombre", rol.getNombre());
-                return rolMap;
-            })
+        // Convertir roles a formato amigable con metadata
+        List<RolDisplayDto> rolesDisplay = usuario.getRoles().stream()
+            .map(this::convertRolToDisplayDto)
             .collect(Collectors.toList());
-        dto.setRoles(nombresRoles);
+        dto.setRoles(rolesDisplay);
         
         return dto;
     }
@@ -111,15 +144,16 @@ public class UsuarioController {
         return ResponseEntity.ok(dtos);
     }
     
-    @GetMapping("/estadisticas")
+    @GetMapping("/contar")
     public ResponseEntity<Map<String, Object>> getEstadisticas() {
         long totalUsuarios = usuarioService.findAll().size();
         long usuariosActivos = usuarioService.countByActivoTrue();
+        long usuariosInactivos = totalUsuarios - usuariosActivos;
         
         Map<String, Object> estadisticas = new HashMap<>();
-        estadisticas.put("totalUsuarios", totalUsuarios);
-        estadisticas.put("usuariosActivos", usuariosActivos);
-        estadisticas.put("usuariosInactivos", totalUsuarios - usuariosActivos);
+        estadisticas.put("total", totalUsuarios);
+        estadisticas.put("activos", usuariosActivos);
+        estadisticas.put("inactivos", usuariosInactivos);
         
         return ResponseEntity.ok(estadisticas);
     }
@@ -151,7 +185,7 @@ public class UsuarioController {
     
     // ENDPOINTS CON @PATHVARIABLE ÚLTIMO (después de todos los fijos)
     
-    @GetMapping("/{id}")  // ← ESTE DEBE IR AL FINAL
+    @GetMapping("/{id}")
     public ResponseEntity<?> getUsuarioById(@PathVariable Long id) {
         Optional<Usuario> usuarioOpt = usuarioService.findById(id);
         if (usuarioOpt.isEmpty()) {

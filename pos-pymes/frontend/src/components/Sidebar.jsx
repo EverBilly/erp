@@ -116,7 +116,7 @@ const Sidebar = () => {
           color: 'white'
           }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+        {/* <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
           <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
             {user?.nombre?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
           </Avatar>
@@ -128,7 +128,7 @@ const Sidebar = () => {
               {userRole}
             </Typography>
           </Box>
-        </Box>
+        </Box> */}
       </Box>
       
       <List sx={{ py: 0 }}>

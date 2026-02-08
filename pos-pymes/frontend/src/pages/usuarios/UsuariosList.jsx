@@ -39,11 +39,22 @@ const UsuariosList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [showViewModal, setShowViewModal] = useState(false);
   const [viewingUser, setViewingUser] = useState(null);
+  const [stats, setStats] = useState({ total: 0, activos: 0, inactivos: 0 });
   const navigate = useNavigate();
   const { showNotification } = useNotification();
   const { user } = useAuth();
 
   const itemsPerPage = 10; // Puedes ajustar esto según tus necesidades
+
+  // Cargar estadísticas
+  const fetchStats = async () => {
+    try {
+      const response = await api.get('/usuarios/contar');
+      setStats(response.data);
+    } catch (error) {
+      console.error('Error al cargar estadísticas:', error);
+    }
+  };
 
   // <--- CARGA INICIAL USUARIOS --->
   const fetchUsuariosList = async () => {
@@ -78,6 +89,7 @@ const UsuariosList = () => {
 
   useEffect(() => {
     if(user) {
+      fetchStats();
       fetchUsuariosList();
     }
   }, [showNotification, user, searchTerm, currentPage]);
@@ -119,27 +131,6 @@ const UsuariosList = () => {
     setCurrentPage(1); // Resetear a primera página al buscar
   };
 
-  const getRoleColor = (rol) => {
-    switch (rol) {
-      case 'SUPER_ADMIN':
-        return 'error';
-      case 'ADMIN':
-        return 'warning';
-      case 'USER':
-        return 'info';
-      default:
-        return 'default';
-    }
-  };
-
-  const getStatusColor = (activo) => {
-    return activo ? 'success' : 'default';
-  };
-
-  const getStatusLabel = (activo) => {
-    return activo ? 'Activo' : 'Inactivo';
-  };
-
   if (loading) {
     // Skeletons para que se vea bonito mientras carga
     return (
@@ -154,11 +145,20 @@ const UsuariosList = () => {
   return (
     <Container maxWidth="lg">
       <Box sx={{ my: 4 }}>
-        {/* <--- CABECERA Y NAVEGACIÓN --->*/}
-        <Paper elevation={2} sx={{ p: 3, mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: 2 }}>
-          <Box>
-            <Typography variant="h4" sx={{ mb: 0.5, fontWeight: 600 }}>Gestión de Usuarios</Typography>
-            <Typography variant="body2" color="text.secondary">Administración de cuentas de usuario</Typography>
+        {/* Cabecera con estadísticas */}
+        <Paper elevation={2} sx={{ p: 3, mb: 4, borderRadius: 2 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box>
+              <Typography variant="h4" sx={{ mb: 0.5, fontWeight: 600 }}>Gestión de Usuarios</Typography>
+              <Typography variant="body2" color="text.secondary">Administración de cuentas de usuario</Typography>
+            </Box>
+            
+            {/* Estadísticas */}
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Typography variant="body2" color="text.secondary">
+                Total: {stats.total} | Activos: {stats.activos} | Inactivos: {stats.inactivos}
+              </Typography>
+            </Box>
           </Box>
           
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -182,24 +182,20 @@ const UsuariosList = () => {
               variant="contained"
               startIcon={<Add />}
               onClick={() => navigate('/usuarios/nuevo')}
-              sx={{
-                backgroundColor: '#1976d2',
-                '&:hover': {
-                  backgroundColor: '#1565c0',
-                }
-              }}
+              sx={{ backgroundColor: '#1976d2', '&:hover': { backgroundColor: '#1565c0' } }}
             >
               Nuevo Usuario
             </Button>
           </Box>
         </Paper>
 
-        {/* TABLA DE USUARIOS */}
+        {/* Tabla de usuarios */}
         <Paper elevation={2} sx={{ borderRadius: 2 }}>
           <TableContainer>
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa', width: '60px' }}>#</TableCell>
                   <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Usuario</TableCell>
                   <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Nombre</TableCell>
                   <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Email</TableCell>
@@ -209,7 +205,7 @@ const UsuariosList = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {usuarios.map((usuario) => (
+                {usuarios.map((usuario, index) => (
                   <TableRow 
                     key={usuario.id}
                     sx={{ 
@@ -217,6 +213,9 @@ const UsuariosList = () => {
                       '&:hover': { backgroundColor: '#f0f8ff' }
                     }}
                   >
+                    <TableCell>
+                      <strong>{index + 1 + ((currentPage - 1) * itemsPerPage)}</strong>
+                    </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         <PersonIcon color="primary" />
@@ -226,17 +225,19 @@ const UsuariosList = () => {
                     <TableCell>{usuario.nombreCompleto}</TableCell>
                     <TableCell>{usuario.email}</TableCell>
                     <TableCell>
-                      <Chip
-                        label={usuario.roles?.[0]?.nombre || 'Sin rol'}
-                        color={getRoleColor(usuario.roles?.[0]?.nombre)}
-                        size="small"
-                        variant="outlined"
-                      />
+                      <Tooltip title={usuario.roles?.[0]?.descripcion || 'Sin descripción'}>
+                        <Chip
+                          label={usuario.roles?.[0]?.displayName || 'Sin rol'}
+                          color={usuario.roles?.[0]?.color || 'default'}
+                          size="small"
+                          variant="outlined"
+                        />
+                      </Tooltip>
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={getStatusLabel(usuario.activo)}
-                        color={getStatusColor(usuario.activo)}
+                        label={usuario.activo ? 'Activo' : 'Inactivo'}
+                        color={usuario.activo ? 'success' : 'default'}
                         size="small"
                         variant="outlined"
                       />
@@ -253,8 +254,6 @@ const UsuariosList = () => {
                           </IconButton>
                         </Tooltip>
 
-                        {/* <--- LÓGICA INTELIGENTE DE BOTONES --->*/}
-                        {/* Si usuario es SUPERADMIN (ID 1), no mostrar botones */}
                         {usuario.username !== 'superadmin' && usuario.id !== user?.id ? (
                           <>
                             <Tooltip title="Editar">
@@ -267,7 +266,6 @@ const UsuariosList = () => {
                               </IconButton>
                             </Tooltip>
 
-                            {/* Si está ACTIVO, mostrar Borrar (Desactivar) */}
                             {usuario.activo ? (
                               <Tooltip title="Desactivar">
                                 <IconButton
@@ -279,7 +277,6 @@ const UsuariosList = () => {
                                 </IconButton>
                               </Tooltip>
                             ) : (
-                              /* Si está INACTIVO, mostrar Activar (Restaurar) */
                               <Tooltip title="Reactivar Usuario">
                                 <IconButton
                                   onClick={() => handleRestore(usuario.id, usuario.username)}
@@ -318,12 +315,7 @@ const UsuariosList = () => {
       </Box>
 
       {/* Modal de vista detallada */}
-      <Dialog 
-        open={showViewModal} 
-        onClose={() => setShowViewModal(false)}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={showViewModal} onClose={() => setShowViewModal(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Detalles del Usuario</DialogTitle>
         <DialogContent>
           {viewingUser && (
@@ -338,17 +330,19 @@ const UsuariosList = () => {
               <Typography variant="body1" sx={{ mb: 2 }}>{viewingUser.email}</Typography>
               
               <Typography variant="subtitle2">Rol:</Typography>
-              <Chip
-                label={viewingUser.roles?.[0]?.nombre || 'Sin rol'}
-                color={getRoleColor(viewingUser.roles?.[0]?.nombre)}
-                variant="outlined"
-                sx={{ mb: 2 }}
-              />
+              <Tooltip title={viewingUser.roles?.[0]?.descripcion || 'Sin descripción'}>
+                <Chip
+                  label={viewingUser.roles?.[0]?.displayName || 'Sin rol'}
+                  color={viewingUser.roles?.[0]?.color || 'default'}
+                  variant="outlined"
+                  sx={{ mb: 2 }}
+                />
+              </Tooltip>
               
               <Typography variant="subtitle2">Estado:</Typography>
               <Chip
-                label={getStatusLabel(viewingUser.activo)}
-                color={getStatusColor(viewingUser.activo)}
+                label={viewingUser.activo ? 'Activo' : 'Inactivo'}
+                color={viewingUser.activo ? 'success' : 'default'}
                 variant="outlined"
                 sx={{ mb: 2 }}
               />
