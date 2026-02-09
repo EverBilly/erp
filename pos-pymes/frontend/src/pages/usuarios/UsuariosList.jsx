@@ -94,12 +94,18 @@ const UsuariosList = () => {
     }
   }, [showNotification, user, searchTerm, currentPage]);
 
+  const actualizarDespues = async () => {
+    await fetchStats();
+    await fetchUsuariosList();
+  };
+
   // <--- FUNCIÓN DE DESACTIVACIÓN (Para usuarios activos) --->
   const handleDelete = async (id, nombre) => {
     if (window.confirm(`¿Estás seguro de DESACTIVAR al usuario ${nombre}?`)) {
       try {
         await api.delete(`/usuarios/${id}`);
         showNotification('Usuario desactivado correctamente', 'warning');
+        actualizarDespues();
         fetchUsuariosList();
       } catch (error) {
         showNotification('Error al desactivar usuario', 'error');
@@ -114,6 +120,7 @@ const UsuariosList = () => {
         // Usamos el endpoint de activar (Patch)
         await api.patch(`/usuarios/${id}/activar`);
         showNotification('Usuario reactivado correctamente', 'success');
+        actualizarDespues();
         fetchUsuariosList();
       } catch (error) {
         showNotification('Error al reactivar usuario', 'error');
@@ -130,6 +137,9 @@ const UsuariosList = () => {
     setSearchTerm(event.target.value);
     setCurrentPage(1); // Resetear a primera página al buscar
   };
+
+  // Determinar si el usuario es SUPER_ADMIN
+  const isSuperAdmin = user?.roles?.some(r => r.authority === 'SUPER_ADMIN');
 
   if (loading) {
     // Skeletons para que se vea bonito mientras carga
@@ -199,7 +209,9 @@ const UsuariosList = () => {
                   <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Usuario</TableCell>
                   <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Nombre</TableCell>
                   <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Email</TableCell>
+                  {isSuperAdmin && (
                   <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Rol</TableCell>
+                  )}
                   <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa' }}>Estado</TableCell>
                   <TableCell sx={{ fontWeight: 600, backgroundColor: '#f8f9fa', textAlign: 'right' }}>Acciones</TableCell>
                 </TableRow>
@@ -224,16 +236,18 @@ const UsuariosList = () => {
                     </TableCell>
                     <TableCell>{usuario.nombreCompleto}</TableCell>
                     <TableCell>{usuario.email}</TableCell>
-                    <TableCell>
-                      <Tooltip title={usuario.roles?.[0]?.descripcion || 'Sin descripción'}>
-                        <Chip
-                          label={usuario.roles?.[0]?.displayName || 'Sin rol'}
-                          color={usuario.roles?.[0]?.color || 'default'}
-                          size="small"
-                          variant="outlined"
-                        />
-                      </Tooltip>
-                    </TableCell>
+                    {isSuperAdmin && (
+                      <TableCell>
+                        <Tooltip title={usuario.roles?.[0]?.descripcion || 'Sin descripción'}>
+                          <Chip
+                            label={usuario.roles?.[0]?.displayName || 'Sin rol'}
+                            color={usuario.roles?.[0]?.color || 'default'}
+                            size="small"
+                            variant="outlined"
+                          />
+                        </Tooltip>
+                      </TableCell>
+                    )}
                     <TableCell>
                       <Chip
                         label={usuario.activo ? 'Activo' : 'Inactivo'}
@@ -329,15 +343,19 @@ const UsuariosList = () => {
               <Typography variant="subtitle2">Email:</Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>{viewingUser.email}</Typography>
               
-              <Typography variant="subtitle2">Rol:</Typography>
-              <Tooltip title={viewingUser.roles?.[0]?.descripcion || 'Sin descripción'}>
-                <Chip
-                  label={viewingUser.roles?.[0]?.displayName || 'Sin rol'}
-                  color={viewingUser.roles?.[0]?.color || 'default'}
-                  variant="outlined"
-                  sx={{ mb: 2 }}
-                />
-              </Tooltip>
+              {isSuperAdmin && (
+                <>
+                  <Typography variant="subtitle2">Rol:</Typography>
+                  <Tooltip title={viewingUser.roles?.[0]?.descripcion || 'Sin descripción'}>
+                    <Chip
+                      label={viewingUser.roles?.[0]?.displayName || 'Sin rol'}
+                      color={viewingUser.roles?.[0]?.color || 'default'}
+                      variant="outlined"
+                      sx={{ mb: 2 }}
+                    />
+                  </Tooltip>
+                </>
+              )}
               
               <Typography variant="subtitle2">Estado:</Typography>
               <Chip
