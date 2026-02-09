@@ -1,0 +1,25 @@
+# Archivos de entorno
+.env
+.env.local
+.env.development
+.env.production
+
+# Carpetas de dependencias
+node_modules/
+target/
+.mvn/
+
+# Logs y datos locales
+*.log
+logs/
+db-data/
+maven-repo/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.dockerignore
