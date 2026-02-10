@@ -3,7 +3,7 @@
 -- ============================================
 
 -- 1. Crear tabla de Tenants (Inquilinos/Empresas)
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(150) NOT NULL,
     identificador VARCHAR(50) UNIQUE NOT NULL, -- ej: 'restaurante-mario', 'colegio-san-judas'
@@ -16,7 +16,7 @@ CREATE TABLE tenants (
 
 
 -- 1. TABLA DE USUARIOS
-CREATE TABLE  usuarios (
+CREATE TABLE IF NOT EXISTS usuarios (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE  usuarios (
 );
 
 -- 2. TABLA DE ROLES
-CREATE TABLE  roles (
+CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(50) UNIQUE NOT NULL,
     descripcion TEXT,
@@ -49,7 +49,7 @@ CREATE TABLE  roles (
 );
 
 -- 3. TABLA DE MENÚS
-CREATE TABLE  menus (
+CREATE TABLE IF NOT EXISTS menus (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     ruta VARCHAR(255),
@@ -71,7 +71,7 @@ CREATE TABLE  menus (
 );
 
 -- 4. TABLA DE PERMISOS
-CREATE TABLE  permisos (
+CREATE TABLE IF NOT EXISTS permisos (
     id SERIAL PRIMARY KEY,
     codigo VARCHAR(100) UNIQUE NOT NULL,
     nombre VARCHAR(150) NOT NULL,
@@ -84,7 +84,7 @@ CREATE TABLE  permisos (
 );
 
 -- 5. TABLA USUARIO_ROL
-CREATE TABLE  usuario_rol (
+CREATE TABLE IF NOT EXISTS usuario_rol (
     usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
     rol_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
     asignado_por INTEGER REFERENCES usuarios(id),
@@ -94,7 +94,7 @@ CREATE TABLE  usuario_rol (
 );
 
 -- 6. TABLA ROL_PERMISO
-CREATE TABLE  rol_permiso (
+CREATE TABLE IF NOT EXISTS rol_permiso (
     rol_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
     permiso_id INTEGER REFERENCES permisos(id) ON DELETE CASCADE,
     concedido BOOLEAN DEFAULT true,
@@ -103,7 +103,7 @@ CREATE TABLE  rol_permiso (
 );
 
 -- 7. TABLA ROL_MENU
-CREATE TABLE  rol_menu (
+CREATE TABLE IF NOT EXISTS rol_menu (
     rol_id INTEGER REFERENCES roles(id) ON DELETE CASCADE,
     menu_id INTEGER REFERENCES menus(id) ON DELETE CASCADE,
     activo BOOLEAN DEFAULT true,
@@ -117,7 +117,7 @@ CREATE TABLE  rol_menu (
 );
 
 -- 8. TABLA USUARIO_MENU (PERMISOS DIRECTOS)
-CREATE TABLE  usuario_menu (
+CREATE TABLE IF NOT EXISTS usuario_menu (
     usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
     menu_id INTEGER REFERENCES menus(id) ON DELETE CASCADE,
     activo BOOLEAN DEFAULT true,
@@ -132,7 +132,7 @@ CREATE TABLE  usuario_menu (
 );
 
 -- 9. TABLA USUARIO_PERMISO (PERMISOS DIRECTOS)
-CREATE TABLE  usuario_permiso (
+CREATE TABLE IF NOT EXISTS usuario_permiso (
     usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
     permiso_id INTEGER REFERENCES permisos(id) ON DELETE CASCADE,
     concedido BOOLEAN DEFAULT true,
@@ -141,7 +141,7 @@ CREATE TABLE  usuario_permiso (
 );
 
 -- 10. TABLA DE SESIONES
-CREATE TABLE  sesiones_usuario (
+CREATE TABLE IF NOT EXISTS sesiones_usuario (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     usuario_id INTEGER REFERENCES usuarios(id) ON DELETE CASCADE,
     token_actual TEXT NOT NULL,
@@ -162,7 +162,7 @@ CREATE TABLE  sesiones_usuario (
 );
 
 -- 11. TABLA DE ACTIVIDAD
-CREATE TABLE  actividad_usuario (
+CREATE TABLE IF NOT EXISTS actividad_usuario (
     id BIGSERIAL PRIMARY KEY,
     usuario_id INTEGER REFERENCES usuarios(id),
     tipo_actividad VARCHAR(50) NOT NULL,
@@ -175,7 +175,7 @@ CREATE TABLE  actividad_usuario (
 );
 
 -- 12. TABLA DE AUDITORÍA
-CREATE TABLE  auditoria_permisos (
+CREATE TABLE IF NOT EXISTS auditoria_permisos (
     id BIGSERIAL PRIMARY KEY,
     tabla_afectada VARCHAR(50) NOT NULL,
     registro_id INTEGER NOT NULL,
@@ -189,7 +189,7 @@ CREATE TABLE  auditoria_permisos (
 );
 
 -- 13. TABLA DE CONFIGURACIÓN
-CREATE TABLE  configuracion_sistema (
+CREATE TABLE IF NOT EXISTS configuracion_sistema (
     id SERIAL PRIMARY KEY,
     clave VARCHAR(100) UNIQUE NOT NULL,
     valor TEXT,
@@ -205,7 +205,7 @@ CREATE TABLE  configuracion_sistema (
 );
 
 -- 14. TABLA DE PLANTILLAS DE ROL
-CREATE TABLE  plantillas_rol (
+CREATE TABLE IF NOT EXISTS plantillas_rol (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
@@ -217,7 +217,7 @@ CREATE TABLE  plantillas_rol (
 );
 
 -- 15. TABLA DE REGLAS
-CREATE TABLE  reglas_permisos (
+CREATE TABLE IF NOT EXISTS reglas_permisos (
     id SERIAL PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
@@ -230,7 +230,7 @@ CREATE TABLE  reglas_permisos (
 );
 
 -- 16. TABLA DE BACKUPS
-CREATE TABLE  backup_permisos (
+CREATE TABLE IF NOT EXISTS backup_permisos (
     id BIGSERIAL PRIMARY KEY,
     fecha_backup TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     motivo VARCHAR(100),
