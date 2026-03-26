@@ -68,7 +68,7 @@ const UsuariosList = () => {
 
       // Filtrar por búsqueda
       const filtered = allUsuarios.filter(usuario =>
-        usuario.nombreCompleto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        usuario.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         usuario.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         usuario.email?.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -234,11 +234,11 @@ const UsuariosList = () => {
                         <strong>{usuario.username}</strong>
                       </Box>
                     </TableCell>
-                    <TableCell>{usuario.nombreCompleto}</TableCell>
+                    <TableCell>{usuario.fullName}</TableCell>
                     <TableCell>{usuario.email}</TableCell>
                     {isSuperAdmin && (
                       <TableCell>
-                        <Tooltip title={usuario.roles?.[0]?.descripcion || 'Sin descripción'}>
+                        <Tooltip title={usuario.roles?.[0]?.description || 'Sin descripción'}>
                           <Chip
                             label={usuario.roles?.[0]?.displayName || 'Sin rol'}
                             color={usuario.roles?.[0]?.color || 'default'}
@@ -250,8 +250,8 @@ const UsuariosList = () => {
                     )}
                     <TableCell>
                       <Chip
-                        label={usuario.activo ? 'Activo' : 'Inactivo'}
-                        color={usuario.activo ? 'success' : 'default'}
+                        label={usuario.active ? 'Activo' : 'Inactivo'}
+                        color={usuario.active ? 'success' : 'default'}
                         size="small"
                         variant="outlined"
                       />
@@ -280,7 +280,7 @@ const UsuariosList = () => {
                               </IconButton>
                             </Tooltip>
 
-                            {usuario.activo ? (
+                            {usuario.active ? (
                               <Tooltip title="Desactivar">
                                 <IconButton
                                   onClick={() => handleDelete(usuario.id, usuario.username)}
@@ -338,7 +338,7 @@ const UsuariosList = () => {
               <Typography variant="body1" sx={{ mb: 2, fontWeight: 600 }}>{viewingUser.username}</Typography>
               
               <Typography variant="subtitle2">Nombre Completo:</Typography>
-              <Typography variant="body1" sx={{ mb: 2 }}>{viewingUser.nombreCompleto}</Typography>
+              <Typography variant="body1" sx={{ mb: 2 }}>{viewingUser.fullName}</Typography>
               
               <Typography variant="subtitle2">Email:</Typography>
               <Typography variant="body1" sx={{ mb: 2 }}>{viewingUser.email}</Typography>
@@ -346,7 +346,7 @@ const UsuariosList = () => {
               {isSuperAdmin && (
                 <>
                   <Typography variant="subtitle2">Rol:</Typography>
-                  <Tooltip title={viewingUser.roles?.[0]?.descripcion || 'Sin descripción'}>
+                  <Tooltip title={viewingUser.roles?.[0]?.description || 'Sin descripción'}>
                     <Chip
                       label={viewingUser.roles?.[0]?.displayName || 'Sin rol'}
                       color={viewingUser.roles?.[0]?.color || 'default'}
@@ -359,15 +359,15 @@ const UsuariosList = () => {
               
               <Typography variant="subtitle2">Estado:</Typography>
               <Chip
-                label={viewingUser.activo ? 'Activo' : 'Inactivo'}
-                color={viewingUser.activo ? 'success' : 'default'}
+                label={viewingUser.active ? 'Activo' : 'Inactivo'}
+                color={viewingUser.active ? 'success' : 'default'}
                 variant="outlined"
                 sx={{ mb: 2 }}
               />
               
               <Typography variant="subtitle2">Fecha de Creación:</Typography>
               <Typography variant="body1">
-                {viewingUser.fechaCreacion ? new Date(viewingUser.fechaCreacion).toLocaleString() : 'No disponible'}
+                {viewingUser.createdAt ? new Date(viewingUser.createdAt).toLocaleString() : 'No disponible'}
               </Typography>
             </Box>
           )}

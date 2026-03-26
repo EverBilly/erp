@@ -13,7 +13,7 @@ import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import org.hibernate.annotations.Type;
 
 @Entity
-@Table(name = "usuarios")
+@Table(name = "users")
 public class Usuario {
 
     @Id
@@ -34,32 +34,32 @@ public class Usuario {
     private String passwordHash;
 
     @Column(nullable = false)
-    private boolean activo = true;
+    private boolean active = true;
 
-    @Column(name = "fecha_creacion")
-    private LocalDateTime fechaCreacion;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
-    @Column(name = "ultimo_login")
-    private LocalDateTime ultimoLogin;
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
 
-    @Column(name = "intentos_login")
-    private int intentosLogin = 0;
+    @Column(name = "login_attempts")
+    private int loginAttempts = 0;
 
-    @Column(name = "bloqueado_hasta")
-    private LocalDateTime bloqueadoHasta;
+    @Column(name = "locked_until")
+    private LocalDateTime lockedUntil;
 
-    @Column(name = "nombre_completo", length = 150)
-    private String nombreCompleto;
+    @Column(name = "full_name", length = 150)
+    private String fullName;
 
     @Column(length = 20)
-    private String telefono;
+    private String phone;
 
     @Column(name = "avatar_url")
     private String avatarUrl;
 
     private String timezone = "UTC";
 
-    private String idioma = "es";
+    private String locale = "es";
 
     @Type(JsonBinaryType.class)
     @Column(columnDefinition = "jsonb")
@@ -67,37 +67,36 @@ public class Usuario {
 
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-        name = "usuario_rol",
-        joinColumns = @JoinColumn(name = "usuario_id"),
-        inverseJoinColumns = @JoinColumn(name = "rol_id")
+        name = "user_roles",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     @JsonBackReference
     private Set<Rol> roles = new HashSet<>();
 
     @JsonIgnore
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SesionUsuario> sesiones = new HashSet<>();
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<SesionUsuario> sessions = new HashSet<>();
 
-    // Constructores
     public Usuario() {}
 
-    public Usuario(String username, String email, String passwordHash, String nombreCompleto) {
+    public Usuario(String username, String email, String passwordHash, String fullName) {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
-        this.nombreCompleto = nombreCompleto;
+        this.fullName = fullName;
     }
 
     @PrePersist
     protected void onCreate() {
-        fechaCreacion = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
-    
+
     // Getters y Setters
     public Long getId() {
         return id;
     }
-    
+
     public void setId(Long id) {
         this.id = id;
     }
@@ -113,141 +112,140 @@ public class Usuario {
             this.tenant = null;
         }
     }
-    
+
     public String getUsername() {
         return username;
     }
-    
+
     public void setUsername(String username) {
         this.username = username;
     }
-    
+
     public String getEmail() {
         return email;
     }
-    
+
     public void setEmail(String email) {
         this.email = email;
     }
-    
+
     public String getPasswordHash() {
         return passwordHash;
     }
-    
+
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
     }
-    
-    public Boolean getActivo() {
-        return activo;
+
+    public Boolean getActive() {
+        return active;
     }
-    
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
-    
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
-    
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
-    
-    public LocalDateTime getUltimoLogin() {
-        return ultimoLogin;
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
     }
-    
-    public void setUltimoLogin(LocalDateTime ultimoLogin) {
-        this.ultimoLogin = ultimoLogin;
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
     }
-    
-    public Integer getIntentosLogin() {
-        return intentosLogin;
+
+    public Integer getLoginAttempts() {
+        return loginAttempts;
     }
-    
-    public void setIntentosLogin(Integer intentosLogin) {
-        this.intentosLogin = intentosLogin;
+
+    public void setLoginAttempts(Integer loginAttempts) {
+        this.loginAttempts = loginAttempts;
     }
-    
-    public LocalDateTime getBloqueadoHasta() {
-        return bloqueadoHasta;
+
+    public LocalDateTime getLockedUntil() {
+        return lockedUntil;
     }
-    
-    public void setBloqueadoHasta(LocalDateTime bloqueadoHasta) {
-        this.bloqueadoHasta = bloqueadoHasta;
+
+    public void setLockedUntil(LocalDateTime lockedUntil) {
+        this.lockedUntil = lockedUntil;
     }
-    
-    public String getNombreCompleto() {
-        return nombreCompleto;
+
+    public String getFullName() {
+        return fullName;
     }
-    
-    public void setNombreCompleto(String nombreCompleto) {
-        this.nombreCompleto = nombreCompleto;
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
-    
-    public String getTelefono() {
-        return telefono;
+
+    public String getPhone() {
+        return phone;
     }
-    
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
-    
+
     public String getAvatarUrl() {
         return avatarUrl;
     }
-    
+
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
-    
+
     public String getTimezone() {
         return timezone;
     }
-    
+
     public void setTimezone(String timezone) {
         this.timezone = timezone;
     }
-    
-    public String getIdioma() {
-        return idioma;
+
+    public String getLocale() {
+        return locale;
     }
-    
-    public void setIdioma(String idioma) {
-        this.idioma = idioma;
+
+    public void setLocale(String locale) {
+        this.locale = locale;
     }
-    
+
     public String getMetadata() {
         return metadata;
     }
-    
+
     public void setMetadata(String metadata) {
         this.metadata = metadata;
     }
-    
+
     public Set<Rol> getRoles() {
         return roles;
     }
-    
+
     public void setRoles(Set<Rol> roles) {
         this.roles = roles;
     }
-    
-    public Set<SesionUsuario> getSesiones() {
-        return sesiones;
-    }
-    
-    public void setSesiones(Set<SesionUsuario> sesiones) {
-        this.sesiones = sesiones;
+
+    public Set<SesionUsuario> getSessions() {
+        return sessions;
     }
 
-    // Métodos helper
-    public void agregarRol(Rol rol) {
+    public void setSessions(Set<SesionUsuario> sessions) {
+        this.sessions = sessions;
+    }
+
+    public void addRole(Rol rol) {
         this.roles.add(rol);
     }
-    
-    public void removerRol(Rol rol) {
+
+    public void removeRole(Rol rol) {
         this.roles.remove(rol);
     }
 }

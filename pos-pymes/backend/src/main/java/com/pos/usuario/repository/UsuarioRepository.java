@@ -14,45 +14,45 @@ import java.util.Optional;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
-    
+
     Optional<Usuario> findByUsername(String username);
-    
+
     Optional<Usuario> findByEmail(String email);
-    
-    Optional<Usuario> findByUsernameAndActivoTrue(String username);
-    
-    Optional<Usuario> findByEmailAndActivoTrue(String email);
-    
+
+    Optional<Usuario> findByUsernameAndActiveTrue(String username);
+
+    Optional<Usuario> findByEmailAndActiveTrue(String email);
+
     Boolean existsByUsername(String username);
-    
+
     Boolean existsByEmail(String email);
 
     List<Usuario> findAll();
-    
+
     // Método customizado para verificar email único excluyendo un id
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM Usuario u WHERE u.email = :email AND u.id != :id")
     Boolean existsByEmailAndIdNot(@Param("email") String email, @Param("id") Long id);
-    
-    @Query("SELECT u FROM Usuario u JOIN u.roles r WHERE r.nombre = :rolNombre")
+
+    @Query("SELECT u FROM Usuario u JOIN u.roles r WHERE r.name = :rolNombre")
     List<Usuario> findAllByRole(@Param("rolNombre") String rolNombre);
 
     @Modifying
     @Transactional
-    @Query("UPDATE Usuario u SET u.intentosLogin = u.intentosLogin + 1 WHERE u.id = :id")
+    @Query("UPDATE Usuario u SET u.loginAttempts = u.loginAttempts + 1 WHERE u.id = :id")
     void incrementarIntentosFallidos(@Param("id") Long id);
-    
+
     @Modifying
     @Transactional
-    @Query("UPDATE Usuario u SET u.intentosLogin = 0, u.bloqueadoHasta = null WHERE u.id = :id")
+    @Query("UPDATE Usuario u SET u.loginAttempts = 0, u.lockedUntil = null WHERE u.id = :id")
     void resetIntentosFallidos(@Param("id") Long id);
-    
+
     @Modifying
     @Transactional
-    @Query("UPDATE Usuario u SET u.bloqueadoHasta = :bloqueadoHasta WHERE u.id = :id")
-    void bloquearUsuario(@Param("id") Long id, @Param("bloqueadoHasta") LocalDateTime bloqueadoHasta);
-    
+    @Query("UPDATE Usuario u SET u.lockedUntil = :lockedUntil WHERE u.id = :id")
+    void bloquearUsuario(@Param("id") Long id, @Param("lockedUntil") LocalDateTime lockedUntil);
+
     @Modifying
     @Transactional
-    @Query("UPDATE Usuario u SET u.ultimoLogin = :ultimoLogin WHERE u.id = :id")
-    void actualizarUltimoLogin(@Param("id") Long id, @Param("ultimoLogin") LocalDateTime ultimoLogin);
+    @Query("UPDATE Usuario u SET u.lastLogin = :lastLogin WHERE u.id = :id")
+    void actualizarUltimoLogin(@Param("id") Long id, @Param("lastLogin") LocalDateTime lastLogin);
 }

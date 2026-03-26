@@ -29,7 +29,7 @@ import { useAuth } from '../../context/AuthContext';
 const usuarioSchema = Yup.object().shape({
   username: Yup.string().required('Requerido').min(3, 'Mínimo 3 caracteres'),
   email: Yup.string().email('Email inválido').required('Requerido'),
-  nombreCompleto: Yup.string().required('Requerido'),
+  fullName: Yup.string().required('Requerido'),
   roleIds: Yup.array().min(1, 'Selecciona al menos un rol'),
   password: Yup.string().when('isEditing', {
     is: false,
@@ -55,9 +55,9 @@ const UsuarioForm = () => {
   const [initialValuesForm, setInitialValuesForm] = useState({
     username: '',
     email: '',
-    nombreCompleto: '',
-    telefono: '',
-    activo: true,
+    fullName: '',
+    phone: '',
+    active: true,
     password: '',
     roleIds: [],
     isEditing: isEdit
@@ -94,9 +94,9 @@ const UsuarioForm = () => {
           setInitialValuesForm({
             username: userData.username,
             email: userData.email,
-            nombreCompleto: userData.nombreCompleto,
-            telefono: userData.telefono,
-            activo: userData.activo,
+            fullName: userData.fullName,
+            phone: userData.phone,
+            active: userData.active,
             roleIds: roleIds,
             password: '',
             isEditing: true
@@ -201,7 +201,7 @@ const UsuarioForm = () => {
                 // Calcular availableRoles en cada render
                 const isSuperAdmin = user?.roles?.some(r => r.authority === 'SUPER_ADMIN');
                 const availableRoles = roles.filter(role => {
-                  if (role.nombre === 'SUPER_ADMIN' && !isSuperAdmin) {
+                  if (role.name === 'SUPER_ADMIN' && !isSuperAdmin) {
                     return false;
                   }
                   return true;
@@ -251,14 +251,14 @@ const UsuarioForm = () => {
                       </Grid>
 
                       <Grid item xs={12}>
-                        <Field name="nombreCompleto">
+                        <Field name="fullName">
                           {({ field }) => (
                             <TextField
                               {...field}
                               label="Nombre completo"
                               fullWidth
-                              error={touched.nombreCompleto && !!errors.nombreCompleto}
-                              helperText={touched.nombreCompleto && errors.nombreCompleto}
+                              error={touched.fullName && !!errors.fullName}
+                              helperText={touched.fullName && errors.fullName}
                               variant="outlined"
                               size="small"
                               sx={{ mb: 2 }}
@@ -268,7 +268,7 @@ const UsuarioForm = () => {
                       </Grid>
 
                       <Grid item xs={12} sm={6}>
-                        <Field name="telefono">
+                        <Field name="phone">
                           {({ field }) => (
                             <TextField
                               {...field}
@@ -283,13 +283,13 @@ const UsuarioForm = () => {
                       </Grid>
 
                       <Grid item xs={12} sm={6}>
-                        <Field name="activo">
+                        <Field name="active">
                           {({ field }) => (
                             <FormControlLabel
                               control={
                                 <Switch
                                   checked={field.value}
-                                  onChange={(e) => setFieldValue('activo', e.target.checked)}
+                                  onChange={(e) => setFieldValue('active', e.target.checked)}
                                   color="primary"
                                 />
                               }
@@ -355,7 +355,7 @@ const UsuarioForm = () => {
                         <Autocomplete
                           multiple
                           options={availableRoles}
-                          getOptionLabel={(option) => option.nombre}
+                          getOptionLabel={(option) => option.name}
                           value={availableRoles.filter(role => 
                             validRoleIds.includes(role.id)
                           )}
@@ -376,7 +376,7 @@ const UsuarioForm = () => {
                             value.map((option, index) => (
                               <Chip
                                 key={option.id}
-                                label={option.nombre}
+                                label={option.name}
                                 {...getTagProps({ index })}
                                 size="small"
                                 sx={{ mr: 0.5, mb: 0.5 }}

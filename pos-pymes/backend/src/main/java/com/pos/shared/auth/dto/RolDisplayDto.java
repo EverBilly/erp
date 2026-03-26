@@ -1,35 +1,35 @@
 package com.pos.usuario.dto;
 
 public class RolDisplayDto {
-    private String nombre;
+    private String name;
     private String displayName;
-    private String descripcion;
+    private String description;
     private String color;
-    private Integer nivelPrioridad;
+    private Integer priorityLevel;
 
     public RolDisplayDto() {}
-    
-    public RolDisplayDto(String nombre, String displayName, String descripcion, String color, Integer nivelPrioridad) {
-        this.nombre = nombre;
+
+    public RolDisplayDto(String name, String displayName, String description, String color, Integer priorityLevel) {
+        this.name = name;
         this.displayName = displayName;
-        this.descripcion = descripcion;
+        this.description = description;
         this.color = color;
-        this.nivelPrioridad = nivelPrioridad;
+        this.priorityLevel = priorityLevel;
     }
 
     // Getters y Setters
-    public String getNombre() { return nombre; }
-    public void setNombre(String nombre) { this.nombre = nombre; }
-    
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
     public String getDisplayName() { return displayName; }
     public void setDisplayName(String displayName) { this.displayName = displayName; }
-    
-    public String getDescripcion() { return descripcion; }
-    public void setDescripcion(String descripcion) { this.descripcion = descripcion; }
-    
+
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
+
     public String getColor() { return color; }
     public void setColor(String color) { this.color = color; }
-    
-    public Integer getNivelPrioridad() { return nivelPrioridad; }
-    public void setNivelPrioridad(Integer nivelPrioridad) { this.nivelPrioridad = nivelPrioridad; }
+
+    public Integer getPriorityLevel() { return priorityLevel; }
+    public void setPriorityLevel(Integer priorityLevel) { this.priorityLevel = priorityLevel; }
 }

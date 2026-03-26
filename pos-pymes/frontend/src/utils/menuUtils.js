@@ -27,9 +27,9 @@ export const buildMenuTree = (menuList) => {
     }
   });
 
-  // 3. Ordenar por el campo 'orden'
+  // 3. Ordenar por el campo 'sortOrder'
   const sortRecursive = (items) => {
-    items.sort((a, b) => a.orden - b.orden);
+    items.sort((a, b) => a.sortOrder - b.sortOrder);
     items.forEach(item => {
       if (item.children.length > 0) {
         sortRecursive(item.children);

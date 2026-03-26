@@ -23,7 +23,7 @@ const MenuItem = ({ item, depth = 0 }) => {
     const [open, setOpen] = React.useState(false);
     const isLeaf = !item.children || item.children.length === 0;
 
-    const isActive = location.pathname === item.ruta;
+    const isActive = location.pathname === item.path;
     
     const handleClick = () => {
         if (!isLeaf) {
@@ -32,14 +32,14 @@ const MenuItem = ({ item, depth = 0 }) => {
     };
     
     const paddingLeft = 24 + (depth * 16);
-    const IconComponent = getIconComponent(item.icono);
+    const IconComponent = getIconComponent(item.icon);
 
   return (
     <>
       <ListItem disablePadding>
         <ListItemButton
           component={Link}
-          to={item.ruta}
+          to={item.path}
           onClick={handleClick}
           sx={{
             pl: `${paddingLeft}px`,
@@ -58,7 +58,7 @@ const MenuItem = ({ item, depth = 0 }) => {
             <IconComponent fontSize="small" />
           </ListItemIcon>
           <ListItemText 
-            primary={item.nombre} 
+            primary={item.name}
             sx={{ 
               whiteSpace: 'normal',
               overflow: 'hidden',
@@ -98,7 +98,7 @@ const Sidebar = () => {
     if (user?.rol) return user.rol;
     if (user?.role) return user.role;
     if (user?.roles && Array.isArray(user.roles) && user.roles.length > 0) {
-      return user.roles[0].authority || user.roles[0].nombre;
+      return user.roles[0].authority || user.roles[0].name;
     }
     return 'Rol no definido';
   };
@@ -118,11 +118,11 @@ const Sidebar = () => {
       >
         {/* <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
           <Avatar sx={{ bgcolor: 'primary.main', width: 40, height: 40 }}>
-            {user?.nombre?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
+            {user?.fullName?.charAt(0)?.toUpperCase() || user?.username?.charAt(0)?.toUpperCase() || 'U'}
           </Avatar>
           <Box>
             <Typography variant="h6" noWrap sx={{ fontWeight: 600 }}>
-              {user?.nombre || user?.username || 'Usuario'}
+              {user?.fullName || user?.username || 'Usuario'}
             </Typography>
             <Typography variant="caption" sx={{ opacity: 0.9 }}>
               {userRole}

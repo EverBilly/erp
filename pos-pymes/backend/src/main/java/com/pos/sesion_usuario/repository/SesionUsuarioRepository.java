@@ -15,20 +15,20 @@ import java.util.UUID;
 
 @Repository
 public interface SesionUsuarioRepository extends JpaRepository<SesionUsuario, UUID> {
-    
-    Optional<SesionUsuario> findByTokenActual(String token);
-    
-    Optional<SesionUsuario> findByTokenRefresh(String refreshToken);
-    
-    List<SesionUsuario> findByUsuarioIdAndActivaTrue(Long usuarioId);
-    
+
+    Optional<SesionUsuario> findByAccessToken(String token);
+
+    Optional<SesionUsuario> findByRefreshToken(String refreshToken);
+
+    List<SesionUsuario> findByUserIdAndActiveTrue(Long userId);
+
     @Modifying
     @Transactional
-    @Query("UPDATE SesionUsuario s SET s.activa = false WHERE s.usuario.id = :usuarioId AND s.activa = true")
+    @Query("UPDATE SesionUsuario s SET s.active = false WHERE s.user.id = :usuarioId AND s.active = true")
     void cerrarSesionesUsuario(@Param("usuarioId") Long usuarioId);
-    
+
     @Modifying
     @Transactional
-    @Query("UPDATE SesionUsuario s SET s.activa = false WHERE s.fechaExpiracion < :now")
+    @Query("UPDATE SesionUsuario s SET s.active = false WHERE s.expiresAt < :now")
     void cerrarSesionesExpiradas(@Param("now") LocalDateTime now);
 }

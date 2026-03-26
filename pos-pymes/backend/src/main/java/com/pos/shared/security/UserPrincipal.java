@@ -12,35 +12,35 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class UserPrincipal implements UserDetails {
-    
+
     private Long id;
     private String username;
     private String email;
-    
+
     @JsonIgnore
     private String password;
-    
-    private String nombreCompleto;
-    private Boolean activo;
-    
+
+    private String fullName;
+    private Boolean active;
+
     private Collection<? extends GrantedAuthority> authorities;
-    
+
     // IMPORTANTE: Campo usuario para acceso a Tenant
-    private Usuario usuario; 
+    private Usuario usuario;
 
     // Constructor 1: Login (Usuario completo)
-    public UserPrincipal(Long id, String username, String email, String password, 
-                        String nombreCompleto, Boolean activo,
+    public UserPrincipal(Long id, String username, String email, String password,
+                        String fullName, Boolean active,
                         Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
-        this.nombreCompleto = nombreCompleto;
-        this.activo = activo;
+        this.fullName = fullName;
+        this.active = active;
         this.authorities = authorities;
     }
-    
+
     // Constructor 2: Usado por create()
     public UserPrincipal(Usuario usuario, Collection<? extends GrantedAuthority> authorities) {
         this.usuario = usuario;
@@ -48,17 +48,17 @@ public class UserPrincipal implements UserDetails {
         this.username = usuario.getUsername();
         this.email = usuario.getEmail();
         this.password = usuario.getPasswordHash();
-        this.nombreCompleto = usuario.getNombreCompleto();
-        this.activo = usuario.getActivo();
+        this.fullName = usuario.getFullName();
+        this.active = usuario.getActive();
         this.authorities = authorities;
     }
 
     // <--- ESTE ES EL MÉTODO IMPORTANTE ---
     public static UserPrincipal create(Usuario usuario) {
         List<GrantedAuthority> authorities = usuario.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getNombre()))
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
-        
+
         return new UserPrincipal(usuario, authorities);
     }
 
@@ -74,27 +74,27 @@ public class UserPrincipal implements UserDetails {
     public String getEmail() {
         return email;
     }
-    
+
     public void setEmail(String email) {
         this.email = email;
     }
-    
-    public String getNombreCompleto() {
-        return nombreCompleto;
+
+    public String getFullName() {
+        return fullName;
     }
-    
-    public void setNombreCompleto(String nombreCompleto) {
-        this.nombreCompleto = nombreCompleto;
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
-    
-    public Boolean getActivo() {
-        return activo;
+
+    public Boolean getActive() {
+        return active;
     }
-    
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
-    
+
     public Long getTenantId() {
         // Aquí accedemos a través del objeto usuario
         if (this.usuario != null) {
@@ -107,37 +107,37 @@ public class UserPrincipal implements UserDetails {
     public String getUsername() {
         return username;
     }
-    
+
     @Override
     public String getPassword() {
         return password;
     }
-    
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
-    
+
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
-    
+
     @Override
     public boolean isAccountNonLocked() {
-        return activo;
+        return active;
     }
-    
+
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
-    
+
     @Override
     public boolean isEnabled() {
-        return activo;
+        return active;
     }
-    
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -145,7 +145,7 @@ public class UserPrincipal implements UserDetails {
         UserPrincipal that = (UserPrincipal) o;
         return Objects.equals(id, that.id);
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(id);

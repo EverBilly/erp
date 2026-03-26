@@ -8,107 +8,107 @@ public class UserDTO {
     private Long id;
     private String username;
     private String email;
-    private String nombreCompleto;
-    private String telefono;
+    private String fullName;
+    private String phone;
     private String avatarUrl;
     private String timezone;
-    private String idioma;
-    private Boolean activo;
-    private LocalDateTime ultimoLogin;
+    private String locale;
+    private Boolean active;
+    private LocalDateTime lastLogin;
     private Map<String, Object> metadata;
-    
+
     // Constructor
     public UserDTO() {
     }
-    
+
     // Getters y Setters
     public Long getId() {
         return id;
     }
-    
+
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     public String getUsername() {
         return username;
     }
-    
+
     public void setUsername(String username) {
         this.username = username;
     }
-    
+
     public String getEmail() {
         return email;
     }
-    
+
     public void setEmail(String email) {
         this.email = email;
     }
-    
-    public String getNombreCompleto() {
-        return nombreCompleto;
+
+    public String getFullName() {
+        return fullName;
     }
-    
-    public void setNombreCompleto(String nombreCompleto) {
-        this.nombreCompleto = nombreCompleto;
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
-    
-    public String getTelefono() {
-        return telefono;
+
+    public String getPhone() {
+        return phone;
     }
-    
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
+
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
-    
+
     public String getAvatarUrl() {
         return avatarUrl;
     }
-    
+
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
     }
-    
+
     public String getTimezone() {
         return timezone;
     }
-    
+
     public void setTimezone(String timezone) {
         this.timezone = timezone;
     }
-    
-    public String getIdioma() {
-        return idioma;
+
+    public String getLocale() {
+        return locale;
     }
-    
-    public void setIdioma(String idioma) {
-        this.idioma = idioma;
+
+    public void setLocale(String locale) {
+        this.locale = locale;
     }
-    
-    public Boolean getActivo() {
-        return activo;
+
+    public Boolean getActive() {
+        return active;
     }
-    
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
-    
-    public LocalDateTime getUltimoLogin() {
-        return ultimoLogin;
+
+    public LocalDateTime getLastLogin() {
+        return lastLogin;
     }
-    
-    public void setUltimoLogin(LocalDateTime ultimoLogin) {
-        this.ultimoLogin = ultimoLogin;
+
+    public void setLastLogin(LocalDateTime lastLogin) {
+        this.lastLogin = lastLogin;
     }
-    
+
     public Map<String, Object> getMetadata() {
         if (metadata == null) {
             metadata = new HashMap<>();
         }
         return metadata;
     }
-    
+
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata;
     }

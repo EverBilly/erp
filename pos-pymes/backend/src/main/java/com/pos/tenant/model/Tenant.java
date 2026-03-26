@@ -12,27 +12,26 @@ public class Tenant {
     private Long id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String identificador; // ej: 'tenant-default'
+    private String identifier;
 
     @Column(nullable = false, length = 150)
-    private String nombre;
+    private String name;
 
     @Column(length = 50)
     private String plan = "free";
 
     @Column
-    private Boolean activo = true;
+    private Boolean active = true;
 
-    @Column(name = "fecha_creacion", updatable = false)
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @Column(columnDefinition = "jsonb")
-    private String configuracion = "{}";
+    private String config = "{}";
 
     @Column(name = "logo_url")
     private String logoUrl;
 
-    // Constructor vacío obligatorio para Hibernate/JPA
     public Tenant() {
     }
 
@@ -40,7 +39,6 @@ public class Tenant {
         this.id = id;
     }
 
-    // Getters y Setters
     public Long getId() {
         return id;
     }
@@ -49,20 +47,20 @@ public class Tenant {
         this.id = id;
     }
 
-    public String getIdentificador() {
-        return identificador;
+    public String getIdentifier() {
+        return identifier;
     }
 
-    public void setIdentificador(String identificador) {
-        this.identificador = identificador;
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
-    public String getNombre() {
-        return nombre;
+    public String getName() {
+        return name;
     }
 
-    public void setNombre(String nombre) {
-        this.nombre = nombre;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getPlan() {
@@ -73,28 +71,28 @@ public class Tenant {
         this.plan = plan;
     }
 
-    public Boolean getActivo() {
-        return activo;
+    public Boolean getActive() {
+        return active;
     }
 
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public String getConfiguracion() {
-        return configuracion;
+    public String getConfig() {
+        return config;
     }
 
-    public void setConfiguracion(String configuracion) {
-        this.configuracion = configuracion;
+    public void setConfig(String config) {
+        this.config = config;
     }
 
     public String getLogoUrl() {

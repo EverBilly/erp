@@ -1,0 +1,63 @@
+{
+  // === JAVA ===
+  "java.format.settings.profile": "GoogleStyle",
+  "java.format.settings.url": "https://raw.githubusercontent.com/google/styleguide/gh-pages/eclipse-java-google-style.xml",
+  "java.format.enabled": true,
+  "java.saveActions.organizeImports": true,
+  "java.completion.importOrder": [
+    "java",
+    "javax",
+    "org",
+    "com"
+  ],
+  "java.import.order": [
+    "java",
+    "javax",
+    "org",
+    "com"
+  ],
+
+  // === JAVASCRIPT / REACT ===
+  "[javascript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+
+  // === GENERAL ===
+  "editor.tabSize": 2,
+  "[java]": {
+    "editor.tabSize": 4,
+    "editor.defaultFormatter": "redhat.java",
+    "editor.formatOnSave": true
+  },
+  "editor.formatOnSave": true,
+  "editor.renderWhitespace": "trailing",
+  "editor.trimAutoWhitespace": true,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+
+  // === EXCLUSIONES ===
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/target": true,
+    "**/.git": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/target": true
+  },
+
+  // === EMMET (para JSX) ===
+  "emmet.includeLanguages": {
+    "javascript": "javascriptreact"
+  }
+}

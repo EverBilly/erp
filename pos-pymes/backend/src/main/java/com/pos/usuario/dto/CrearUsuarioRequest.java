@@ -6,27 +6,27 @@ import jakarta.validation.constraints.Size;
 import java.util.List;
 
 public class CrearUsuarioRequest {
-    
+
     @NotBlank(message = "El username es requerido")
     @Size(min = 3, max = 50, message = "El username debe tener entre 3 y 50 caracteres")
     private String username;
-    
+
     @NotBlank(message = "El email es requerido")
     @Email(message = "El email debe ser válido")
     private String email;
-    
+
     @NotBlank(message = "La contraseña es requerida")
     @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
     private String password;
-    
+
     @NotBlank(message = "El nombre completo es requerido")
-    private String nombreCompleto;
-    
-    private String telefono;
-    private boolean activo = true;
+    private String fullName;
+
+    private String phone;
+    private boolean active = true;
     private String avatarUrl;
     private String timezone;
-    private String idioma;
+    private String locale;
     private String metadata; // String para evitar conflicto
     private List<Integer> roleIds;
 
@@ -34,49 +34,49 @@ public class CrearUsuarioRequest {
     public String getUsername() {
         return username;
     }
-    
+
     public void setUsername(String username) {
         this.username = username;
     }
-    
+
     public String getEmail() {
         return email;
     }
-    
+
     public void setEmail(String email) {
         this.email = email;
     }
-    
+
     public String getPassword() {
         return password;
     }
-    
+
     public void setPassword(String password) {
         this.password = password;
     }
-    
-    public String getNombreCompleto() {
-        return nombreCompleto;
-    }
-    
-    public void setNombreCompleto(String nombreCompleto) {
-        this.nombreCompleto = nombreCompleto;
-    }
-    
-    public String getTelefono() {
-        return telefono;
-    }
-    
-    public void setTelefono(String telefono) {
-        this.telefono = telefono;
+
+    public String getFullName() {
+        return fullName;
     }
 
-    public boolean isActivo() {
-        return activo;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
-    public void setActivo(boolean activo) {
-        this.activo = activo;
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
     public String getAvatarUrl() {
@@ -95,12 +95,12 @@ public class CrearUsuarioRequest {
         this.timezone = timezone;
     }
 
-    public String getIdioma() {
-        return idioma;
+    public String getLocale() {
+        return locale;
     }
 
-    public void setIdioma(String idioma) {
-        this.idioma = idioma;
+    public void setLocale(String locale) {
+        this.locale = locale;
     }
 
     public String getMetadata() {

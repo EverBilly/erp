@@ -1,6 +1,6 @@
 package com.pos.rol.repository;
 
-import com.pos.rol.model.Rol;  // <-- Import actualizado
+import com.pos.rol.model.Rol;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,14 +11,14 @@ import java.util.List;
 
 @Repository
 public interface RolRepository extends JpaRepository<Rol, Long> {
-    
-    Optional<Rol> findByNombre(String nombre);
-    
-    List<Rol> findByActivoTrue();
-    
-    @Query("SELECT r FROM Rol r WHERE r.esSistema = true")
+
+    Optional<Rol> findByName(String name);
+
+    List<Rol> findByActiveTrue();
+
+    @Query("SELECT r FROM Rol r WHERE r.isSystem = true")
     List<Rol> findRolesSistema();
-    
-    @Query("SELECT r FROM Rol r WHERE r.nivelPrioridad > :minPriority AND r.activo = true ORDER BY r.nivelPrioridad DESC")
+
+    @Query("SELECT r FROM Rol r WHERE r.priorityLevel > :minPriority AND r.active = true ORDER BY r.priorityLevel DESC")
     List<Rol> findRolesConPrioridadMinima(@Param("minPriority") Integer minPriority);
 }

@@ -9,7 +9,7 @@ import java.util.Map;
 
 @Service
 public class RolDisplayService {
-    
+
     private static final Map<String, String> ROLE_COLOR_MAP = new HashMap<>();
     static {
         ROLE_COLOR_MAP.put("SUPER_ADMIN", "error");
@@ -17,20 +17,20 @@ public class RolDisplayService {
         ROLE_COLOR_MAP.put("USER", "info");
         // Se pueden añadir más dinámicamente
     }
-    
+
     public RolDisplayDto convertToDisplayDto(Rol rol) {
-        String displayName = rol.getDescripcion() != null && !rol.getDescripcion().trim().isEmpty() 
-            ? rol.getDescripcion() 
-            : rol.getNombre();
-            
-        String color = ROLE_COLOR_MAP.getOrDefault(rol.getNombre(), "default");
-        
+        String displayName = rol.getDescription() != null && !rol.getDescription().trim().isEmpty()
+            ? rol.getDescription()
+            : rol.getName();
+
+        String color = ROLE_COLOR_MAP.getOrDefault(rol.getName(), "default");
+
         return new RolDisplayDto(
-            rol.getNombre(),
+            rol.getName(),
             displayName,
-            rol.getDescripcion() != null ? rol.getDescripcion() : "Sin descripción",
+            rol.getDescription() != null ? rol.getDescription() : "Sin descripción",
             color,
-            rol.getNivelPrioridad()
+            rol.getPriorityLevel()
         );
     }
 }

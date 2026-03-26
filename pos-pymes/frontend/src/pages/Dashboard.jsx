@@ -39,7 +39,7 @@ const Dashboard = () => {
             Panel de Control
           </Typography>
           <Typography variant="h6" color="text.secondary">
-            Bienvenido, {user?.nombreCompleto || 'Usuario'}
+            Bienvenido, {user?.fullName || 'Usuario'}
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
             Rol: <strong>{user?.roles?.[0]?.authority || 'Sistema'}</strong>

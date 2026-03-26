@@ -17,12 +17,12 @@ import java.time.LocalDateTime;
 
 @Service
 public class AuthService {
-    
+
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
-    
+
     public AuthService(AuthenticationManager authenticationManager,
                       JwtTokenProvider tokenProvider,
                       UsuarioRepository usuarioRepository,
@@ -32,14 +32,14 @@ public class AuthService {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
     }
-    
+
     public LoginResponse authenticateUser(LoginRequest loginRequest) {
         // 1. Verificar que el usuario existe
         Usuario usuario = usuarioRepository.findByUsername(loginRequest.getUsername())
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        
+
         // 2. Verificar que esté activo
-        if (!usuario.getActivo()) {
+        if (!usuario.getActive()) {
             throw new RuntimeException("Usuario inactivo");
         }
 
@@ -49,9 +49,9 @@ public class AuthService {
         }
 
         // 4. Actualizar último login
-        usuario.setUltimoLogin(LocalDateTime.now());
+        usuario.setLastLogin(LocalDateTime.now());
         usuarioRepository.save(usuario);
-        
+
         // 5. Crear UserPrincipal para la autenticación
         UserPrincipal userPrincipal = UserPrincipal.create(usuario);
 
@@ -61,10 +61,10 @@ public class AuthService {
             null,  // credentials null porque ya verificamos la contraseña
             userPrincipal.getAuthorities()
         );
-        
+
         // 7. Establecer autenticación en el contexto de seguridad
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        
+
         // 8. Generar token JWT
         String jwt = tokenProvider.generateTokenFromUsername(userPrincipal.getUsername());
 
@@ -75,7 +75,7 @@ public class AuthService {
             usuario.getId(),
             usuario.getUsername(),
             usuario.getEmail(),
-            usuario.getNombreCompleto(),
+            usuario.getFullName(),
             userPrincipal.getAuthorities()
         );
     }

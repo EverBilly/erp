@@ -106,12 +106,12 @@ const Layout = () => {
           </IconButton>
 
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {user?.nombreCompleto || 'Dashboard'}
+            {user?.fullName || 'Dashboard'}
           </Typography>
           
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
             <Typography variant="body2" sx={{ mr: 2, display: { xs: 'none', sm: 'block' } }}>
-              {user?.nombreCompleto}
+              {user?.fullName}
             </Typography>
             <IconButton
               size="large"

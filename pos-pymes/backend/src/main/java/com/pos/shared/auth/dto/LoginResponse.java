@@ -5,29 +5,29 @@ import java.util.Collection;
 import java.util.List;
 
 public class LoginResponse {
-    
+
     private String token;
     private String tokenType = "Bearer";
     private Long id;
     private String username;
     private String email;
-    private String nombreCompleto;
+    private String fullName;
     private Collection<? extends GrantedAuthority> roles;
 
     public LoginResponse() {}
-    
-    public LoginResponse(String token, String tokenType, Long id, 
-                        String username, String email, String nombreCompleto,
+
+    public LoginResponse(String token, String tokenType, Long id,
+                        String username, String email, String fullName,
                         Collection<? extends GrantedAuthority> roles) {
         this.token = token;
         this.tokenType = tokenType;
         this.id = id;
         this.username = username;
         this.email = email;
-        this.nombreCompleto = nombreCompleto;
+        this.fullName = fullName;
         this.roles = roles;
     }
-    
+
     // Getters
     public String getToken() {
         return token;
@@ -36,7 +36,7 @@ public class LoginResponse {
     public void setToken(String token) {
         this.token = token;
     }
-    
+
     public String getTokenType() {
         return tokenType;
     }
@@ -44,7 +44,7 @@ public class LoginResponse {
     public void setTokenType(String tokenType) {
         this.tokenType = tokenType;
     }
-    
+
     public Long getId() {
         return id;
     }
@@ -52,7 +52,7 @@ public class LoginResponse {
     public void setId(Long id) {
         this.id = id;
     }
-    
+
     public String getUsername() {
         return username;
     }
@@ -60,7 +60,7 @@ public class LoginResponse {
     public void setUsername(String username) {
         this.username = username;
     }
-    
+
     public String getEmail() {
         return email;
     }
@@ -68,15 +68,15 @@ public class LoginResponse {
     public void setEmail(String email) {
         this.email = email;
     }
-    
-    public String getNombreCompleto() {
-        return nombreCompleto;
+
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setNombreCompleto(String nombreCompleto) {
-        this.nombreCompleto = nombreCompleto;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
-    
+
     public Collection<? extends GrantedAuthority> getRoles() {
         return roles;
     }

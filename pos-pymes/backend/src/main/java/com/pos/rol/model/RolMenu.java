@@ -1,45 +1,49 @@
 package com.pos.rol.model;
 
 import com.pos.menu.model.Menu;
-import com.pos.rol.model.Rol;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "rol_menu")
+@Table(name = "role_menus")
 @IdClass(RolMenuId.class)
 public class RolMenu {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "rol_id")
-    private Rol rol;
+    @JoinColumn(name = "role_id")
+    private Rol role;
 
     @Id
     @ManyToOne
     @JoinColumn(name = "menu_id")
     private Menu menu;
 
-    private Boolean activo = true;
-    private Boolean puedeVer = true;
-    private Boolean puedeEditar = false;
-    private Boolean puedeEliminar = false;
+    private Boolean active = true;
 
-    // Getters y Setters
-    public Rol getRol() { return rol; }
-    public void setRol(Rol rol) { this.rol = rol; }
+    @Column(name = "can_view")
+    private Boolean canView = true;
+
+    @Column(name = "can_edit")
+    private Boolean canEdit = false;
+
+    @Column(name = "can_delete")
+    private Boolean canDelete = false;
+
+    public Rol getRole() { return role; }
+    public void setRole(Rol role) { this.role = role; }
 
     public Menu getMenu() { return menu; }
     public void setMenu(Menu menu) { this.menu = menu; }
 
-    public Boolean getActivo() { return activo; }
-    public void setActivo(Boolean activo) { this.activo = activo; }
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 
-    public Boolean getPuedeVer() { return puedeVer; }
-    public void setPuedeVer(Boolean puedeVer) { this.puedeVer = puedeVer; }
+    public Boolean getCanView() { return canView; }
+    public void setCanView(Boolean canView) { this.canView = canView; }
 
-    public Boolean getPuedeEditar() { return puedeEditar; }
-    public void setPuedeEditar(Boolean puedeEditar) { this.puedeEditar = puedeEditar; }
+    public Boolean getCanEdit() { return canEdit; }
+    public void setCanEdit(Boolean canEdit) { this.canEdit = canEdit; }
 
-    public Boolean getPuedeEliminar() { return puedeEliminar; }
-    public void setPuedeEliminar(Boolean puedeEliminar) { this.puedeEliminar = puedeEliminar; }
+    public Boolean getCanDelete() { return canDelete; }
+    public void setCanDelete(Boolean canDelete) { this.canDelete = canDelete; }
 }

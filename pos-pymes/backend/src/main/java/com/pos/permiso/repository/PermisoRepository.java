@@ -12,15 +12,15 @@ import java.util.Set;
 
 @Repository
 public interface PermisoRepository extends JpaRepository<Permiso, Long> {
-    
-    Optional<Permiso> findByCodigo(String codigo);
-    
-    List<Permiso> findByModulo(String modulo);
-    
+
+    Optional<Permiso> findByCode(String code);
+
+    List<Permiso> findByModule(String module);
+
     List<Permiso> findByCategoria(String categoria);
-    
-    List<Permiso> findByActivoTrue();
-    
-    @Query("SELECT p FROM Permiso p WHERE p.codigo IN :codigos AND p.activo = true")
-    List<Permiso> findByCodigos(@Param("codigos") Set<String> codigos);
+
+    List<Permiso> findByActiveTrue();
+
+    @Query("SELECT p FROM Permiso p WHERE p.code IN :codes AND p.active = true")
+    List<Permiso> findByCodigos(@Param("codes") Set<String> codes);
 }

@@ -27,14 +27,14 @@ public class MenuService {
     private MenuDto convertToDto(Menu menu) {
         return new MenuDto(
             menu.getId(),
-            menu.getNombre(),
-            menu.getRuta(),
-            menu.getIcono(),
-            menu.getOrden(),
+            menu.getName(),
+            menu.getPath(),
+            menu.getIcon(),
+            menu.getSortOrder(),
             menu.getParentId(),
             menu.getVisible(),
-            menu.getEsExterno(),
-            menu.getAbrirEnNuevaVentana(),
+            menu.getIsExternal(),
+            menu.getOpenInNewTab(),
             menu.getBadgeText(),
             menu.getBadgeColor()
         );

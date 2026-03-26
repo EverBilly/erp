@@ -4,14 +4,13 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class RolMenuId implements Serializable {
-    private Long rol;
+    private Long role;
     private Long menu;
 
-    // Constructor vacío obligatorio
     public RolMenuId() {}
 
-    public RolMenuId(Long rol, Long menu) {
-        this.rol = rol;
+    public RolMenuId(Long role, Long menu) {
+        this.role = role;
         this.menu = menu;
     }
 
@@ -20,11 +19,11 @@ public class RolMenuId implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         RolMenuId that = (RolMenuId) o;
-        return Objects.equals(rol, that.rol) && Objects.equals(menu, that.menu);
+        return Objects.equals(role, that.role) && Objects.equals(menu, that.menu);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(rol, menu);
+        return Objects.hash(role, menu);
     }
 }

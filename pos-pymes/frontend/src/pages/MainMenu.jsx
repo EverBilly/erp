@@ -65,14 +65,14 @@ const MainMenu = () => {
   }
 
   // Función para obtener color por categoría
-  const getCategoryColor = (nombre) => {
-    if (nombre.toLowerCase().includes('administración') || nombre.toLowerCase().includes('admin')) return '#1976d2';
-    if (nombre.toLowerCase().includes('usuarios') || nombre.toLowerCase().includes('usuario')) return '#e91e63';
-    if (nombre.toLowerCase().includes('configuración') || nombre.toLowerCase().includes('config')) return '#607d8b';
-    if (nombre.toLowerCase().includes('reportes') || nombre.toLowerCase().includes('reporte')) return '#9c27b0';
-    if (nombre.toLowerCase().includes('finanzas') || nombre.toLowerCase().includes('caja') || nombre.toLowerCase().includes('pago')) return '#4caf50';
-    if (nombre.toLowerCase().includes('inventario') || nombre.toLowerCase().includes('stock')) return '#ff9800';
-    if (nombre.toLowerCase().includes('ventas') || nombre.toLowerCase().includes('pedido')) return '#2196f3';
+  const getCategoryColor = (name) => {
+    if (name.toLowerCase().includes('administración') || name.toLowerCase().includes('admin')) return '#1976d2';
+    if (name.toLowerCase().includes('usuarios') || name.toLowerCase().includes('usuario')) return '#e91e63';
+    if (name.toLowerCase().includes('configuración') || name.toLowerCase().includes('config')) return '#607d8b';
+    if (name.toLowerCase().includes('reportes') || name.toLowerCase().includes('reporte')) return '#9c27b0';
+    if (name.toLowerCase().includes('finanzas') || name.toLowerCase().includes('caja') || name.toLowerCase().includes('pago')) return '#4caf50';
+    if (name.toLowerCase().includes('inventario') || name.toLowerCase().includes('stock')) return '#ff9800';
+    if (name.toLowerCase().includes('ventas') || name.toLowerCase().includes('pedido')) return '#2196f3';
     return '#757575';
   };
 
@@ -83,7 +83,7 @@ const MainMenu = () => {
           Panel de Control POS
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          Bienvenido, <strong>{user?.nombre}</strong> • Selecciona un módulo para comenzar
+          Bienvenido, <strong>{user?.fullName}</strong> • Selecciona un módulo para comenzar
         </Typography>
       </Box>
 
@@ -99,14 +99,14 @@ const MainMenu = () => {
       ) : (
         <Grid container spacing={3}>
           {menus.map((item) => {
-            const IconComponent = getIconComponent(item.icono);
-            const categoryColor = getCategoryColor(item.nombre);
+            const IconComponent = getIconComponent(item.icon);
+            const categoryColor = getCategoryColor(item.name);
 
             return (
               <Grid item xs={12} sm={6} md={3} key={item.id}>
                 <Button
                   component={Link}
-                  to={item.ruta}
+                  to={item.path}
                   fullWidth
                   sx={{
                     textDecoration: 'none',
@@ -161,10 +161,10 @@ const MainMenu = () => {
                         color="text.primary"
                         sx={{ mb: 1 }}
                       >
-                        {item.nombre}
+                        {item.name}
                       </Typography>
                       <Chip
-                        label={item.categoria || 'General'}
+                        label={item.category || 'General'}
                         size="small"
                         sx={{
                           backgroundColor: `${categoryColor}20`,

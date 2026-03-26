@@ -19,147 +19,90 @@ public class Rol {
     private Long id;
 
     @Column(unique = true, nullable = false, length = 50)
-    private String nombre;
+    private String name;
 
-    private String descripcion;
+    private String description;
 
-    @Column(name = "nivel_prioridad")
-    private Integer nivelPrioridad = 0;
+    @Column(name = "priority_level")
+    private Integer priorityLevel = 0;
 
-    private boolean activo = true;
+    private boolean active = true;
 
-    @Column(name = "es_sistema")
-    private boolean esSistema = false;
+    @Column(name = "is_system")
+    private boolean isSystem = false;
 
-    @Column(name = "fecha_creacion")
-    private LocalDateTime fechaCreacion;
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     @ManyToMany(mappedBy = "roles")
     @JsonBackReference
-    private Set<Usuario> usuarios = new HashSet<>();
+    private Set<Usuario> users = new HashSet<>();
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "creado_por")
+    @JoinColumn(name = "created_by")
     @JsonIgnore
-    private Usuario creadoPor;
+    private Usuario createdBy;
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "rol_permiso",
-        joinColumns = @JoinColumn(name = "rol_id"),
-        inverseJoinColumns = @JoinColumn(name = "permiso_id")
+        name = "role_permissions",
+        joinColumns = @JoinColumn(name = "role_id"),
+        inverseJoinColumns = @JoinColumn(name = "permission_id")
     )
     @JsonIgnore
-    private Set<Permiso> permisos = new HashSet<>();
+    private Set<Permiso> permissions = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "rol_menu",
-        joinColumns = @JoinColumn(name = "rol_id"),
+        name = "role_menus",
+        joinColumns = @JoinColumn(name = "role_id"),
         inverseJoinColumns = @JoinColumn(name = "menu_id")
     )
     @JsonIgnore
     private Set<Menu> menus = new HashSet<>();
 
-    // Constructores
     public Rol() {}
 
-    public Rol(String nombre, String descripcion) {
-        this.nombre = nombre;
-        this.descripcion = descripcion;
+    public Rol(String name, String description) {
+        this.name = name;
+        this.description = description;
     }
 
     @PrePersist
     protected void onCreate() {
-        fechaCreacion = LocalDateTime.now();
+        createdAt = LocalDateTime.now();
     }
 
-    // Getters y Setters
-    public Long getId() { 
-        return id; 
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) { 
-        this.id = id; 
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getNombre() { 
-        return nombre; 
-    }
-    
-    public void setNombre(String nombre) { 
-        this.nombre = nombre; 
-    }
+    public String getDescription() { return description; }
+    public void setDescription(String description) { this.description = description; }
 
-    public String getDescripcion() { 
-        return descripcion; 
-    }
+    public Integer getPriorityLevel() { return priorityLevel; }
+    public void setPriorityLevel(Integer priorityLevel) { this.priorityLevel = priorityLevel; }
 
-    public void setDescripcion(String descripcion) { 
-        this.descripcion = descripcion; 
-    }
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 
-    public Integer getNivelPrioridad() {
-        return nivelPrioridad;
-    }
-    
-    public void setNivelPrioridad(Integer nivelPrioridad) {
-        this.nivelPrioridad = nivelPrioridad;
-    }
-    
-    public Boolean getActivo() {
-        return activo;
-    }
-    
-    public void setActivo(Boolean activo) {
-        this.activo = activo;
-    }
-    
-    public Boolean getEsSistema() {
-        return esSistema;
-    }
-    
-    public void setEsSistema(Boolean esSistema) {
-        this.esSistema = esSistema;
-    }
-    
-    public LocalDateTime getFechaCreacion() {
-        return fechaCreacion;
-    }
-    
-    public void setFechaCreacion(LocalDateTime fechaCreacion) {
-        this.fechaCreacion = fechaCreacion;
-    }
-    
-    public Usuario getCreadoPor() {
-        return creadoPor;
-    }
-    
-    public void setCreadoPor(Usuario creadoPor) {
-        this.creadoPor = creadoPor;
-    }
-    
-    public Set<Usuario> getUsuarios() {
-        return usuarios;
-    }
-    
-    public void setUsuarios(Set<Usuario> usuarios) {
-        this.usuarios = usuarios;
-    }
-    
-    public Set<Permiso> getPermisos() {
-        return permisos;
-    }
-    
-    public void setPermisos(Set<Permiso> permisos) {
-        this.permisos = permisos;
-    }
-    
-    public Set<Menu> getMenus() {
-        return menus;
-    }
-    
-    public void setMenus(Set<Menu> menus) {
-        this.menus = menus;
-    }
+    public Boolean getIsSystem() { return isSystem; }
+    public void setIsSystem(Boolean isSystem) { this.isSystem = isSystem; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Usuario getCreatedBy() { return createdBy; }
+    public void setCreatedBy(Usuario createdBy) { this.createdBy = createdBy; }
+
+    public Set<Usuario> getUsers() { return users; }
+    public void setUsers(Set<Usuario> users) { this.users = users; }
+
+    public Set<Permiso> getPermissions() { return permissions; }
+    public void setPermissions(Set<Permiso> permissions) { this.permissions = permissions; }
+
+    public Set<Menu> getMenus() { return menus; }
+    public void setMenus(Set<Menu> menus) { this.menus = menus; }
 }
