@@ -1,6 +1,6 @@
 package com.pos.shared.security;
 
-import com.pos.usuario.model.Usuario;
+import com.pos.user.model.User;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -25,10 +25,8 @@ public class UserPrincipal implements UserDetails {
 
     private Collection<? extends GrantedAuthority> authorities;
 
-    // IMPORTANTE: Campo usuario para acceso a Tenant
-    private Usuario usuario;
+    private User user;
 
-    // Constructor 1: Login (Usuario completo)
     public UserPrincipal(Long id, String username, String email, String password,
                         String fullName, Boolean active,
                         Collection<? extends GrantedAuthority> authorities) {
@@ -41,102 +39,64 @@ public class UserPrincipal implements UserDetails {
         this.authorities = authorities;
     }
 
-    // Constructor 2: Usado por create()
-    public UserPrincipal(Usuario usuario, Collection<? extends GrantedAuthority> authorities) {
-        this.usuario = usuario;
-        this.id = usuario.getId();
-        this.username = usuario.getUsername();
-        this.email = usuario.getEmail();
-        this.password = usuario.getPasswordHash();
-        this.fullName = usuario.getFullName();
-        this.active = usuario.getActive();
+    public UserPrincipal(User user, Collection<? extends GrantedAuthority> authorities) {
+        this.user = user;
+        this.id = user.getId();
+        this.username = user.getUsername();
+        this.email = user.getEmail();
+        this.password = user.getPasswordHash();
+        this.fullName = user.getFullName();
+        this.active = user.getActive();
         this.authorities = authorities;
     }
 
-    // <--- ESTE ES EL MÉTODO IMPORTANTE ---
-    public static UserPrincipal create(Usuario usuario) {
-        List<GrantedAuthority> authorities = usuario.getRoles().stream()
+    public static UserPrincipal create(User user) {
+        List<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName()))
                 .collect(Collectors.toList());
 
-        return new UserPrincipal(usuario, authorities);
+        return new UserPrincipal(user, authorities);
     }
 
-    // Getters y Setters
-    public Long getId() {
-        return id;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 
     public Long getTenantId() {
-        // Aquí accedemos a través del objeto usuario
-        if (this.usuario != null) {
-            return this.usuario.getTenant();
+        if (this.user != null) {
+            return this.user.getTenant();
         }
         return null;
     }
 
     @Override
-    public String getUsername() {
-        return username;
-    }
+    public String getUsername() { return username; }
 
     @Override
-    public String getPassword() {
-        return password;
-    }
+    public String getPassword() { return password; }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
-    }
+    public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
 
     @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
+    public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() {
-        return active;
-    }
+    public boolean isAccountNonLocked() { return active; }
 
     @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
+    public boolean isCredentialsNonExpired() { return true; }
 
     @Override
-    public boolean isEnabled() {
-        return active;
-    }
+    public boolean isEnabled() { return active; }
 
     @Override
     public boolean equals(Object o) {
@@ -147,7 +107,5 @@ public class UserPrincipal implements UserDetails {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(id);
-    }
+    public int hashCode() { return Objects.hash(id); }
 }

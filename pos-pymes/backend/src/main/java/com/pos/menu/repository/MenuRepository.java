@@ -13,7 +13,7 @@ import java.util.Set;
 public interface MenuRepository extends JpaRepository<Menu, Long> {
 
     @Query("SELECT DISTINCT m FROM Menu m " +
-           "JOIN RolMenu rm ON m.id = rm.menu.id " +
+           "JOIN RoleMenu rm ON m.id = rm.menu.id " +
            "JOIN rm.role r WHERE r.name IN :roles " +
            "AND m.visible = true " +
            "ORDER BY m.sortOrder")

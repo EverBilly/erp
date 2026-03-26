@@ -12,8 +12,7 @@ import { NotificationProvider } from './context/NotificationContext';
 // Pages
 import Login from './pages/Login';
 import MainMenu from './pages/MainMenu';
-import Dashboard from './pages/Dashboard';
-import UsuariosView from './pages/usuarios/UsuariosView';
+import UsersView from './pages/users/UsersView';
 
 // Theme
 import { theme } from './theme';
@@ -38,7 +37,7 @@ function App() {
               >
 
                 {/* <Route index element={<Dashboard />} /> */}
-                <Route path="usuarios/*" element={<UsuariosView />} />
+                <Route path="users/*" element={<UsersView />} />
               </Route>
               
               <Route path="*" element={<Navigate to="/" />} />

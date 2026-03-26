@@ -4,8 +4,8 @@ import com.pos.shared.auth.dto.LoginRequest;
 import com.pos.shared.auth.dto.LoginResponse;
 import com.pos.shared.security.JwtTokenProvider;
 import com.pos.shared.security.UserPrincipal;
-import com.pos.usuario.model.Usuario;
-import com.pos.usuario.repository.UsuarioRepository;
+import com.pos.user.model.User;
+import com.pos.user.repository.UserRepository;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -20,62 +20,53 @@ public class AuthService {
 
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider tokenProvider;
-    private final UsuarioRepository usuarioRepository;
+    private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     public AuthService(AuthenticationManager authenticationManager,
                       JwtTokenProvider tokenProvider,
-                      UsuarioRepository usuarioRepository,
+                      UserRepository userRepository,
                       PasswordEncoder passwordEncoder) {
         this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
-        this.usuarioRepository = usuarioRepository;
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     public LoginResponse authenticateUser(LoginRequest loginRequest) {
-        // 1. Verificar que el usuario existe
-        Usuario usuario = usuarioRepository.findByUsername(loginRequest.getUsername())
+        User user = userRepository.findByUsername(loginRequest.getUsername())
             .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 2. Verificar que esté activo
-        if (!usuario.getActive()) {
+        if (!user.getActive()) {
             throw new RuntimeException("Usuario inactivo");
         }
 
-        // 3. Verificar contraseña (solución simple sin AuthenticationManager)
-        if (!passwordEncoder.matches(loginRequest.getPassword(), usuario.getPasswordHash())) {
+        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
             throw new RuntimeException("Credenciales inválidas");
         }
 
-        // 4. Actualizar último login
-        usuario.setLastLogin(LocalDateTime.now());
-        usuarioRepository.save(usuario);
+        user.setLastLogin(LocalDateTime.now());
+        userRepository.save(user);
 
-        // 5. Crear UserPrincipal para la autenticación
-        UserPrincipal userPrincipal = UserPrincipal.create(usuario);
+        UserPrincipal userPrincipal = UserPrincipal.create(user);
 
-        // 6. Crear autenticación
         Authentication authentication = new UsernamePasswordAuthenticationToken(
             userPrincipal,
-            null,  // credentials null porque ya verificamos la contraseña
+            null,
             userPrincipal.getAuthorities()
         );
 
-        // 7. Establecer autenticación en el contexto de seguridad
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // 8. Generar token JWT
         String jwt = tokenProvider.generateTokenFromUsername(userPrincipal.getUsername());
 
-        // 9. Crear y devolver respuesta
         return new LoginResponse(
             jwt,
             "Bearer",
-            usuario.getId(),
-            usuario.getUsername(),
-            usuario.getEmail(),
-            usuario.getFullName(),
+            user.getId(),
+            user.getUsername(),
+            user.getEmail(),
+            user.getFullName(),
             userPrincipal.getAuthorities()
         );
     }

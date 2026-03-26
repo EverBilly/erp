@@ -1,10 +1,9 @@
 package com.pos.shared.security;
 
-import com.pos.usuario.model.Usuario;
-import com.pos.shared.security.UserPrincipal;
-import org.springframework.context.annotation.Primary;
-import com.pos.usuario.repository.UsuarioRepository;
+import com.pos.user.model.User;
+import com.pos.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -16,24 +15,24 @@ import org.springframework.transaction.annotation.Transactional;
 public class CustomUserDetailsService implements UserDetailsService {
 
     @Autowired
-    private UsuarioRepository usuarioRepository;
+    private UserRepository userRepository;
 
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findByUsername(usernameOrEmail)
-            .orElseGet(() -> usuarioRepository.findByEmail(usernameOrEmail)
+        User user = userRepository.findByUsername(usernameOrEmail)
+            .orElseGet(() -> userRepository.findByEmail(usernameOrEmail)
                 .orElseThrow(() -> new UsernameNotFoundException(
-                    "Usuario no encontrado: " + usernameOrEmail)));
+                    "User not found: " + usernameOrEmail)));
 
-        return UserPrincipal.create(usuario);
+        return UserPrincipal.create(user);
     }
 
     @Transactional
     public UserDetails loadUserById(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con id: " + id));
+        User user = userRepository.findById(id)
+            .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
 
-        return UserPrincipal.create(usuario);
+        return UserPrincipal.create(user);
     }
 }

@@ -3,7 +3,6 @@ package com.pos.shared.auth.controller;
 import com.pos.shared.auth.dto.LoginRequest;
 import com.pos.shared.auth.dto.LoginResponse;
 import com.pos.shared.auth.service.AuthService;
-import com.pos.usuario.model.Usuario;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;

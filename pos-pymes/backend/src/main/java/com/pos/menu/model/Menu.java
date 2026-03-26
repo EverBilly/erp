@@ -1,6 +1,6 @@
 package com.pos.menu.model;
 
-import com.pos.rol.model.Rol;
+import com.pos.role.model.Role;
 import com.pos.tenant.model.Tenant;
 import com.vladmihalcea.hibernate.type.json.JsonBinaryType;
 import org.hibernate.annotations.Type;
@@ -71,7 +71,7 @@ public class Menu {
     private LocalDateTime updatedAt;
 
     @ManyToMany(mappedBy = "menus", fetch = FetchType.LAZY)
-    private Set<Rol> roles = new HashSet<>();
+    private Set<Role> roles = new HashSet<>();
 
     public Menu() {}
 
@@ -146,6 +146,6 @@ public class Menu {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
-    public Set<Rol> getRoles() { return roles; }
-    public void setRoles(Set<Rol> roles) { this.roles = roles; }
+    public Set<Role> getRoles() { return roles; }
+    public void setRoles(Set<Role> roles) { this.roles = roles; }
 }
