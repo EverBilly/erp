@@ -6,6 +6,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
@@ -22,22 +23,11 @@ public class UserPrincipal implements UserDetails {
 
     private String fullName;
     private Boolean active;
+    private LocalDateTime lockedUntil;
 
     private Collection<? extends GrantedAuthority> authorities;
 
     private User user;
-
-    public UserPrincipal(Long id, String username, String email, String password,
-                        String fullName, Boolean active,
-                        Collection<? extends GrantedAuthority> authorities) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.password = password;
-        this.fullName = fullName;
-        this.active = active;
-        this.authorities = authorities;
-    }
 
     public UserPrincipal(User user, Collection<? extends GrantedAuthority> authorities) {
         this.user = user;
@@ -47,6 +37,7 @@ public class UserPrincipal implements UserDetails {
         this.password = user.getPasswordHash();
         this.fullName = user.getFullName();
         this.active = user.getActive();
+        this.lockedUntil = user.getLockedUntil();
         this.authorities = authorities;
     }
 
@@ -59,22 +50,12 @@ public class UserPrincipal implements UserDetails {
     }
 
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-
     public String getFullName() { return fullName; }
-    public void setFullName(String fullName) { this.fullName = fullName; }
-
     public Boolean getActive() { return active; }
-    public void setActive(Boolean active) { this.active = active; }
 
     public Long getTenantId() {
-        if (this.user != null) {
-            return this.user.getTenant();
-        }
-        return null;
+        return user != null ? user.getTenantId() : null;
     }
 
     @Override
@@ -90,7 +71,10 @@ public class UserPrincipal implements UserDetails {
     public boolean isAccountNonExpired() { return true; }
 
     @Override
-    public boolean isAccountNonLocked() { return active; }
+    public boolean isAccountNonLocked() {
+        if (lockedUntil == null) return true;
+        return lockedUntil.isBefore(LocalDateTime.now());
+    }
 
     @Override
     public boolean isCredentialsNonExpired() { return true; }

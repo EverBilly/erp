@@ -14,23 +14,12 @@ public class UserResponse {
     private boolean active;
     private LocalDateTime createdAt;
     private LocalDateTime lastLogin;
+    private String avatarUrl;
+    private String timezone;
+    private String locale;
     private List<RoleDisplayDto> roles;
 
     public UserResponse() {}
-
-    public UserResponse(Long id, String username, String email, String fullName,
-                       String phone, boolean active, LocalDateTime createdAt,
-                       LocalDateTime lastLogin, List<RoleDisplayDto> roles) {
-        this.id = id;
-        this.username = username;
-        this.email = email;
-        this.fullName = fullName;
-        this.phone = phone;
-        this.active = active;
-        this.createdAt = createdAt;
-        this.lastLogin = lastLogin;
-        this.roles = roles;
-    }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -55,6 +44,15 @@ public class UserResponse {
 
     public LocalDateTime getLastLogin() { return lastLogin; }
     public void setLastLogin(LocalDateTime lastLogin) { this.lastLogin = lastLogin; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public String getTimezone() { return timezone; }
+    public void setTimezone(String timezone) { this.timezone = timezone; }
+
+    public String getLocale() { return locale; }
+    public void setLocale(String locale) { this.locale = locale; }
 
     public List<RoleDisplayDto> getRoles() { return roles; }
     public void setRoles(List<RoleDisplayDto> roles) { this.roles = roles; }

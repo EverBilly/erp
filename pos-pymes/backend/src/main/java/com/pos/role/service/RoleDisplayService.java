@@ -25,6 +25,7 @@ public class RoleDisplayService {
         String color = ROLE_COLOR_MAP.getOrDefault(role.getName(), "default");
 
         return new RoleDisplayDto(
+            role.getId(),
             role.getName(),
             displayName,
             role.getDescription() != null ? role.getDescription() : "Sin descripción",

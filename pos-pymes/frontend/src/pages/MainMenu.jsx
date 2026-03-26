@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   Container,
   Grid,
@@ -8,59 +8,25 @@ import {
   Box,
   Button,
   useTheme,
-  useMediaQuery,
   CircularProgress,
-  Alert,
-  IconButton,
-  Tooltip,
   Chip
 } from '@mui/material';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import api from '../services/api';
 import { getIconComponent } from '../utils/iconMapper';
 
 const MainMenu = () => {
-  const [menus, setMenus] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const { user } = useAuth();
+  const { user, menuTree, loading, logout } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  useEffect(() => {
-    const fetchMenus = async () => {
-      try {
-        // ✅ Ahora llama al endpoint correcto: /api/menus
-        const response = await api.get('/menus');
-        setMenus(response.data);
-      } catch (err) {
-        console.error('Error al cargar menús:', err);
-        setError('No se pudieron cargar los módulos. Intente nuevamente.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (user) {
-      fetchMenus();
-    }
-  }, [user]);
+  const menus = menuTree || [];
 
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
         <CircularProgress />
       </Box>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Alert severity="error">{error}</Alert>
-      </Container>
     );
   }
 
@@ -187,7 +153,7 @@ const MainMenu = () => {
           variant="outlined"
           color="error"
           onClick={() => {
-            localStorage.removeItem('token');
+            logout();
             navigate('/login');
           }}
           sx={{

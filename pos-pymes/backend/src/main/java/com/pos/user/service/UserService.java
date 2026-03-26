@@ -1,5 +1,6 @@
 package com.pos.user.service;
 
+import com.pos.user.exception.UserNotFoundException;
 import com.pos.user.model.User;
 import com.pos.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -30,6 +31,11 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    public User findByIdOrThrow(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
+    }
+
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
     }
@@ -43,29 +49,17 @@ public class UserService {
         if (user.getId() == null) {
             user.setCreatedAt(LocalDateTime.now());
         }
-
-        if (user.getPasswordHash() != null && !user.getPasswordHash().isEmpty()) {
-            if (!user.getPasswordHash().startsWith("$2a$")) {
-                user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
-            }
-        }
-
+        encodePasswordIfNeeded(user);
         return userRepository.save(user);
     }
 
     @Transactional
     public void softDelete(Long id) {
-        User user = findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found: " + id));
+        User user = findByIdOrThrow(id);
         user.setActive(false);
         user.setLockedUntil(null);
         user.setLoginAttempts(0);
         userRepository.save(user);
-    }
-
-    @Transactional
-    public void deleteById(Long id) {
-        userRepository.deleteById(id);
     }
 
     public boolean existsByUsername(String username) {
@@ -77,67 +71,43 @@ public class UserService {
     }
 
     public boolean existsByEmailAndIdNot(String email, Long id) {
-        Optional<User> user = userRepository.findByEmail(email);
-        return user.isPresent() && !user.get().getId().equals(id);
+        return userRepository.existsByEmailAndIdNot(email, id);
+    }
+
+    public List<User> findByActiveTrue() {
+        return userRepository.findByActiveTrue();
+    }
+
+    public long countByActiveTrue() {
+        return userRepository.countByActiveTrue();
+    }
+
+    public List<User> findByNameContaining(String name) {
+        return userRepository.findByFullNameContainingIgnoreCase(name);
+    }
+
+    public List<User> findAllByRole(String roleName) {
+        return userRepository.findAllByRole(roleName);
     }
 
     @Transactional
     public void incrementFailedAttempts(Long userId) {
-        userRepository.findById(userId).ifPresent(user -> {
-            user.setLoginAttempts(user.getLoginAttempts() + 1);
-            userRepository.save(user);
-        });
+        userRepository.incrementFailedAttempts(userId);
     }
 
     @Transactional
     public void resetFailedAttempts(Long userId) {
-        userRepository.findById(userId).ifPresent(user -> {
-            user.setLoginAttempts(0);
-            user.setLockedUntil(null);
-            userRepository.save(user);
-        });
+        userRepository.resetFailedAttempts(userId);
     }
 
     @Transactional
     public void lockUser(Long userId, LocalDateTime lockedUntil) {
-        userRepository.findById(userId).ifPresent(user -> {
-            user.setLockedUntil(lockedUntil);
-            userRepository.save(user);
-        });
+        userRepository.lockUser(userId, lockedUntil);
     }
 
     @Transactional
-    public void updateLastLogin(Long userId, LocalDateTime lastLogin) {
-        userRepository.findById(userId).ifPresent(user -> {
-            user.setLastLogin(lastLogin);
-            userRepository.save(user);
-        });
-    }
-
-    public List<User> findByNameContainingIgnoreCase(String name) {
-        return userRepository.findAll().stream()
-                .filter(u -> u.getFullName() != null &&
-                           u.getFullName().toLowerCase().contains(name.toLowerCase()))
-                .toList();
-    }
-
-    public long countByActiveTrue() {
-        return userRepository.findAll().stream()
-                .filter(User::getActive)
-                .count();
-    }
-
-    public List<User> findAllByActiveTrue() {
-        return userRepository.findAll().stream()
-                .filter(User::getActive)
-                .toList();
-    }
-
-    public List<User> findAllByRole(String roleName) {
-        return userRepository.findAll().stream()
-                .filter(u -> u.getRoles() != null &&
-                           u.getRoles().stream().anyMatch(r -> r.getName().equals(roleName)))
-                .toList();
+    public void updateLastLogin(Long userId) {
+        userRepository.updateLastLogin(userId, LocalDateTime.now());
     }
 
     public boolean validatePassword(String rawPassword, String encodedPassword) {
@@ -146,5 +116,12 @@ public class UserService {
 
     public long count() {
         return userRepository.count();
+    }
+
+    private void encodePasswordIfNeeded(User user) {
+        String password = user.getPasswordHash();
+        if (password != null && !password.isEmpty() && !password.startsWith("$2a$")) {
+            user.setPasswordHash(passwordEncoder.encode(password));
+        }
     }
 }

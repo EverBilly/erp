@@ -6,7 +6,8 @@ import com.pos.shared.security.JwtTokenProvider;
 import com.pos.shared.security.UserPrincipal;
 import com.pos.user.model.User;
 import com.pos.user.repository.UserRepository;
-import org.springframework.security.authentication.AuthenticationManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,16 +19,15 @@ import java.time.LocalDateTime;
 @Service
 public class AuthService {
 
-    private final AuthenticationManager authenticationManager;
+    private static final Logger log = LoggerFactory.getLogger(AuthService.class);
+
     private final JwtTokenProvider tokenProvider;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public AuthService(AuthenticationManager authenticationManager,
-                      JwtTokenProvider tokenProvider,
+    public AuthService(JwtTokenProvider tokenProvider,
                       UserRepository userRepository,
                       PasswordEncoder passwordEncoder) {
-        this.authenticationManager = authenticationManager;
         this.tokenProvider = tokenProvider;
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -35,10 +35,14 @@ public class AuthService {
 
     public LoginResponse authenticateUser(LoginRequest loginRequest) {
         User user = userRepository.findByUsername(loginRequest.getUsername())
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+            .orElseThrow(() -> new RuntimeException("Credenciales inválidas"));
 
         if (!user.getActive()) {
             throw new RuntimeException("Usuario inactivo");
+        }
+
+        if (user.isLocked()) {
+            throw new RuntimeException("Cuenta bloqueada temporalmente. Intente más tarde.");
         }
 
         if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
@@ -46,27 +50,23 @@ public class AuthService {
         }
 
         user.setLastLogin(LocalDateTime.now());
+        user.setLoginAttempts(0);
         userRepository.save(user);
 
         UserPrincipal userPrincipal = UserPrincipal.create(user);
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(
-            userPrincipal,
-            null,
-            userPrincipal.getAuthorities()
+            userPrincipal, null, userPrincipal.getAuthorities()
         );
-
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         String jwt = tokenProvider.generateTokenFromUsername(userPrincipal.getUsername());
 
+        log.info("Login exitoso: {}", user.getUsername());
+
         return new LoginResponse(
-            jwt,
-            "Bearer",
-            user.getId(),
-            user.getUsername(),
-            user.getEmail(),
-            user.getFullName(),
+            jwt, "Bearer",
+            user.getId(), user.getUsername(), user.getEmail(), user.getFullName(),
             userPrincipal.getAuthorities()
         );
     }

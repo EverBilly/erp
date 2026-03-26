@@ -2,7 +2,6 @@ package com.pos.user.model;
 
 import com.pos.role.model.Role;
 import com.pos.tenant.model.Tenant;
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -18,7 +17,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
 
@@ -55,8 +54,10 @@ public class User {
     @Column(name = "avatar_url")
     private String avatarUrl;
 
+    @Column
     private String timezone = "UTC";
 
+    @Column
     private String locale = "es";
 
     @Type(JsonBinaryType.class)
@@ -69,7 +70,6 @@ public class User {
         joinColumns = @JoinColumn(name = "user_id"),
         inverseJoinColumns = @JoinColumn(name = "role_id")
     )
-    @JsonBackReference
     private Set<Role> roles = new HashSet<>();
 
     public User() {}
@@ -86,11 +86,19 @@ public class User {
         createdAt = LocalDateTime.now();
     }
 
+    // --- Getters y Setters ---
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public Long getTenant() { return tenant != null ? tenant.getId() : null; }
-    public void setTenant(Long tenantId) {
+    public Tenant getTenant() { return tenant; }
+    public void setTenant(Tenant tenant) { this.tenant = tenant; }
+
+    public Long getTenantId() {
+        return tenant != null ? tenant.getId() : null;
+    }
+
+    public void setTenantId(Long tenantId) {
         if (tenantId != null) {
             this.tenant = new Tenant(tenantId);
         } else {
@@ -145,4 +153,12 @@ public class User {
 
     public void addRole(Role role) { this.roles.add(role); }
     public void removeRole(Role role) { this.roles.remove(role); }
+
+    public boolean isLocked() {
+        return lockedUntil != null && lockedUntil.isAfter(LocalDateTime.now());
+    }
+
+    public boolean hasRole(String roleName) {
+        return roles.stream().anyMatch(r -> r.getName().equals(roleName));
+    }
 }

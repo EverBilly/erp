@@ -1,6 +1,7 @@
 package com.pos.shared.auth.dto;
 
 public class RoleDisplayDto {
+    private Long id;
     private String name;
     private String displayName;
     private String description;
@@ -9,13 +10,17 @@ public class RoleDisplayDto {
 
     public RoleDisplayDto() {}
 
-    public RoleDisplayDto(String name, String displayName, String description, String color, Integer priorityLevel) {
+    public RoleDisplayDto(Long id, String name, String displayName, String description, String color, Integer priorityLevel) {
+        this.id = id;
         this.name = name;
         this.displayName = displayName;
         this.description = description;
         this.color = color;
         this.priorityLevel = priorityLevel;
     }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

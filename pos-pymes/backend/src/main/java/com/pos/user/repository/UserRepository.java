@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import java.util.List;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -19,15 +19,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByEmail(String email);
 
-    Optional<User> findByUsernameAndActiveTrue(String username);
-
-    Optional<User> findByEmailAndActiveTrue(String email);
-
     Boolean existsByUsername(String username);
 
     Boolean existsByEmail(String email);
 
-    List<User> findAll();
+    List<User> findByActiveTrue();
+
+    long countByActiveTrue();
+
+    List<User> findByFullNameContainingIgnoreCase(String name);
 
     @Query("SELECT CASE WHEN COUNT(u) > 0 THEN true ELSE false END FROM User u WHERE u.email = :email AND u.id != :id")
     Boolean existsByEmailAndIdNot(@Param("email") String email, @Param("id") Long id);
