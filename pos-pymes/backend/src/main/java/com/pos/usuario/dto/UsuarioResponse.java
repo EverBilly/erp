@@ -1,6 +1,6 @@
 package com.pos.usuario.dto;
 
-import com.pos.usuario.dto.RolDisplayDto;
+import com.pos.shared.auth.dto.RolDisplayDto;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;

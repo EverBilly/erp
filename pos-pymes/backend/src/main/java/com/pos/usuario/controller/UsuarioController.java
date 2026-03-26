@@ -8,7 +8,7 @@ import com.pos.usuario.dto.UsuarioResponse;
 import com.pos.usuario.dto.CrearUsuarioRequest;
 import com.pos.usuario.dto.ActualizarUsuarioRequest;
 import com.pos.rol.repository.RolRepository;
-import com.pos.usuario.dto.RolDisplayDto;
+import com.pos.shared.auth.dto.RolDisplayDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

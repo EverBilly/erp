@@ -186,9 +186,9 @@ ON CONFLICT (identifier) DO NOTHING;
 -- Initial users (password: password123)
 INSERT INTO users (username, email, password_hash, active, full_name, phone, locale, metadata, tenant_id)
 VALUES
-('superadmin', 'superadmin@sistema.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Super Administrador Principal', '+525512345678', 'es', '{"notificaciones": true, "tema": "oscuro"}', 1),
-('admin', 'admin1@sistema.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Ana Lopez Rodriguez', '+525511112222', 'es', '{"notificaciones": true, "tema": "claro"}', 1),
-('empleado1', 'empleado1@empresa.com', '$2a$10$YeyMj3Ki4cVOcfuE3MIaDu98qZqrG/TJ4hNGrcgqliE/DqGMgO0fm', true, 'Pedro Hernandez Luna', '+525577778888', 'es', '{"departamento": "ventas"}', 1)
+('superadmin', 'superadmin@sistema.com', '$2a$10$qwCxBLNPIuW/wRhbUqVBEO3uCvTCvu8J6xVHs2iUat6uWXwFJbhaW', true, 'Super Administrador Principal', '+525512345678', 'es', '{"notificaciones": true, "tema": "oscuro"}', 1),
+('admin', 'admin1@sistema.com', '$2a$10$qwCxBLNPIuW/wRhbUqVBEO3uCvTCvu8J6xVHs2iUat6uWXwFJbhaW', true, 'Ana Lopez Rodriguez', '+525511112222', 'es', '{"notificaciones": true, "tema": "claro"}', 1),
+('empleado1', 'empleado1@empresa.com', '$2a$10$qwCxBLNPIuW/wRhbUqVBEO3uCvTCvu8J6xVHs2iUat6uWXwFJbhaW', true, 'Pedro Hernandez Luna', '+525577778888', 'es', '{"departamento": "ventas"}', 1)
 ON CONFLICT (username) DO NOTHING;
 
 -- System roles

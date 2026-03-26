@@ -14,7 +14,7 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
 
     @Query("SELECT DISTINCT m FROM Menu m " +
            "JOIN RolMenu rm ON m.id = rm.menu.id " +
-           "JOIN rm.rol r WHERE r.name IN :roles " +
+           "JOIN rm.role r WHERE r.name IN :roles " +
            "AND m.visible = true " +
            "ORDER BY m.sortOrder")
     List<Menu> findMenusByRoles(@Param("roles") Set<String> roles);

@@ -17,7 +17,7 @@ public interface PermisoRepository extends JpaRepository<Permiso, Long> {
 
     List<Permiso> findByModule(String module);
 
-    List<Permiso> findByCategoria(String categoria);
+    List<Permiso> findByCategory(String category);
 
     List<Permiso> findByActiveTrue();
 

@@ -1,6 +1,6 @@
 package com.pos.rol.service;
 
-import com.pos.usuario.dto.RolDisplayDto;
+import com.pos.shared.auth.dto.RolDisplayDto;
 import com.pos.rol.model.Rol;
 import org.springframework.stereotype.Service;
 
