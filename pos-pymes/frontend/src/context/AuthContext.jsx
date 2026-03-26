@@ -117,6 +117,7 @@ export const AuthProvider = ({ children }) => {
         type: 'LOGIN_FAILURE',
         payload: error.message || 'Error de autenticación'
       });
+      return { success: false, message: error.message || 'Error de autenticación' };
     }
   };
 
