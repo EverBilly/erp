@@ -207,15 +207,18 @@ VALUES
 (3, 3)   -- empleado1 -> USER
 ON CONFLICT (user_id, role_id) DO NOTHING;
 
+-- Unique constraint to prevent duplicate menus
+CREATE UNIQUE INDEX IF NOT EXISTS idx_menus_unique_path ON menus(tenant_id, path);
+
 -- System menus
 INSERT INTO menus (name, path, icon, sort_order, parent_id, description, tenant_id)
 VALUES
 ('Dashboard', '/dashboard', 'home', 1, NULL, 'Main dashboard', 1),
 ('Administration', '/admin', 'settings', 100, NULL, 'Administration module', 1),
-('Users', '/usuarios', 'users', 1, 2, 'User management', 1),
+('Users', '/users', 'users', 1, 2, 'User management', 1),
 ('Roles', '/admin/roles', 'security', 2, 2, 'Role management', 1),
-('My Profile', '/perfil', 'person', 2, NULL, 'User profile', 1)
-ON CONFLICT DO NOTHING;
+('My Profile', '/profile', 'person', 2, NULL, 'User profile', 1)
+ON CONFLICT (tenant_id, path) DO NOTHING;
 
 -- SUPER_ADMIN sees all menus
 INSERT INTO role_menus (role_id, menu_id, active, can_view, can_edit, can_delete)
