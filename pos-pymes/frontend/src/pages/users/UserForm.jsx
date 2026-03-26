@@ -315,11 +315,14 @@ const UserForm = () => {
                             />
                           )}
                           renderTags={(value, getTagProps) =>
-                            value.map((option, index) => (
-                              <Chip key={option.id} label={option.name}
-                                {...getTagProps({ index })} size="small" sx={{ mr: 0.5, mb: 0.5 }}
-                              />
-                            ))
+                            value.map((option, index) => {
+                              const { key, ...tagProps } = getTagProps({ index });
+                              return (
+                                <Chip key={key} label={option.name}
+                                  {...tagProps} size="small" sx={{ mr: 0.5, mb: 0.5 }}
+                                />
+                              );
+                            })
                           }
                           sx={{ mb: 2 }}
                         />
