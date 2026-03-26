@@ -10,8 +10,6 @@ se usan en la logica de autorizacion todavia.
 | Metodo | Path | Auth | Descripcion |
 |--------|------|------|-------------|
 | GET | `/api/roles` | Autenticado | Listar todos los roles |
-| GET | `/api/dashboard/permissions` | Autenticado | Roles del usuario actual |
-| GET | `/api/dashboard/roles` | Autenticado | Roles del usuario actual (duplicado) |
 
 ## Response
 
@@ -33,9 +31,9 @@ se usan en la logica de autorizacion todavia.
 ## Modelo de datos
 - **roles** - id, name (unico), description, priority_level, active, is_system, created_at, created_by
 - **permissions** - id, code (unico), name, description, module, category, security_level, active (SIN USAR)
-- **user_roles** - usuario_id, rol_id
-- **role_permissions** - rol_id, permiso_id (SIN USAR en logica)
-- **role_menus** - rol_id, menu_id, active, can_view, can_edit, can_delete
+- **user_roles** - user_id, role_id
+- **role_permissions** - role_id, permission_id (SIN USAR en logica)
+- **role_menus** - role_id, menu_id, active, can_view, can_edit, can_delete
 
 ## Logica de colores de rol (para UI)
 ```
@@ -48,18 +46,18 @@ otro                   -> "default" (gris)
 ## Archivos involucrados
 
 ### Backend
-- `rol/controller/RolController.java` - Solo GET /api/roles
-- `rol/service/RolDisplayService.java` - Conversion a RolDisplayDto con colores
-- `rol/repository/RolRepository.java` - Queries (findByName, findByActiveTrue, etc.)
-- `rol/model/Rol.java` - Entidad JPA
-- `rol/model/RolMenu.java` - Entidad puente rol-menu con permisos granulares
-- `rol/model/RolMenuId.java` - Clave compuesta para RolMenu
-- `permiso/model/Permiso.java` - Entidad JPA (existe pero no se usa)
-- `permiso/repository/PermisoRepository.java` - Queries (existe pero no se usa)
-- `shared/auth/dto/RolDisplayDto.java` - DTO para mostrar rol en UI
+- `role/controller/RoleController.java` - Solo GET /api/roles
+- `role/service/RoleDisplayService.java` - Conversion a RoleDisplayDto con colores
+- `role/repository/RoleRepository.java` - Queries (findByName, findByActiveTrue, etc.)
+- `role/model/Role.java` - Entidad JPA
+- `role/model/RoleMenu.java` - Entidad puente rol-menu con permisos granulares
+- `role/model/RoleMenuId.java` - Clave compuesta para RoleMenu
+- `permission/model/Permission.java` - Entidad JPA (existe pero no se usa)
+- `permission/repository/PermissionRepository.java` - Queries (existe pero no se usa)
+- `shared/auth/dto/RoleDisplayDto.java` - DTO para mostrar rol en UI
 
 ### Frontend
-- `pages/usuarios/UsuarioForm.jsx` - Autocomplete de roles al crear/editar usuario
+- `pages/users/UserForm.jsx` - Autocomplete de roles al crear/editar usuario
 
 ## Estado
 - [x] Modelo de roles en BD
@@ -71,12 +69,11 @@ otro                   -> "default" (gris)
 - [ ] Permisos funcionales (modelo existe, logica no)
 - [ ] Asignacion de permisos a roles
 - [ ] Autorizacion basada en permisos (solo hay por roles)
-- [ ] Permisos granulares en RolMenu (can_view, can_edit, can_delete no se validan)
+- [ ] Permisos granulares en RoleMenu (can_view, can_edit, can_delete no se validan)
 
 ## Problemas conocidos
 - Solo hay endpoint GET, no se pueden crear/editar/eliminar roles desde la app
-- Logica de colores duplicada en UsuarioController y RolDisplayService
-- /dashboard/permissions y /dashboard/roles hacen exactamente lo mismo
+- Logica de colores duplicada en UserController y RoleDisplayService
 - Permisos (tabla permissions) definidos pero nunca consultados en autorizacion
-- RolMenu tiene campos granulares (can_view, can_edit, can_delete) que no se usan
-- GET /api/roles retorna la entidad Rol directa, no un DTO
+- RoleMenu tiene campos granulares (can_view, can_edit, can_delete) que no se usan
+- GET /api/roles retorna la entidad Role directa, no un DTO

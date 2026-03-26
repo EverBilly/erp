@@ -76,7 +76,7 @@ Referencia de nombres en ingles con su equivalente en español.
 | `id` | id | BIGSERIAL PK | Identificador unico |
 | `tenant_id` | id del inquilino | BIGINT FK | A que empresa pertenece |
 | `name` | nombre | VARCHAR(100) | Texto que se muestra en el sidebar |
-| `path` | ruta | VARCHAR(255) | URL de navegacion (ej: /usuarios) |
+| `path` | ruta | VARCHAR(255) | URL de navegacion (ej: /users) |
 | `icon` | icono | VARCHAR(50) | Nombre del icono MUI (ej: users, home) |
 | `sort_order` | orden | INTEGER | Posicion en el menu (menor = primero) |
 | `parent_id` | id del padre | BIGINT FK | Menu padre (NULL = raiz) |

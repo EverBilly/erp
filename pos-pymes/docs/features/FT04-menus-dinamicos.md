@@ -19,7 +19,7 @@ El frontend renderiza el menu en un Sidebar lateral.
   {
     "id": 1,
     "name": "Usuarios",
-    "path": "/usuarios",
+    "path": "/users",
     "icon": "users",
     "sortOrder": 1,
     "parentId": null,
@@ -32,7 +32,7 @@ El frontend renderiza el menu en un Sidebar lateral.
   {
     "id": 5,
     "name": "Crear Usuario",
-    "path": "/usuarios/nuevo",
+    "path": "/users/new",
     "icon": "person_add",
     "sortOrder": 1,
     "parentId": 1,
@@ -59,7 +59,7 @@ El frontend renderiza el menu en un Sidebar lateral.
 
 ## Modelo de datos
 - **menus** - id, tenant_id, name, path, icon, sort_order, parent_id, visible, requires_permission, componente, description, params (JSONB), is_external, open_in_new_tab, badge_text, badge_color, created_at, updated_at
-- **role_menus** - rol_id, menu_id, active, can_view, can_edit, can_delete
+- **role_menus** - role_id, menu_id, active, can_view, can_edit, can_delete
 
 ## Archivos involucrados
 
@@ -91,10 +91,9 @@ El frontend renderiza el menu en un Sidebar lateral.
 - [ ] CRUD de menus (no se pueden crear/editar desde la app)
 - [ ] Badges funcionales (campos existen, sin logica)
 - [ ] Drag & drop para reordenar
-- [ ] Permisos granulares de RolMenu (can_view/can_edit/can_delete no se validan)
+- [ ] Permisos granulares de RoleMenu (can_view/can_edit/can_delete no se validan)
 
 ## Problemas conocidos
 - MenuController castea principal sin null check (riesgo de NullPointerException)
 - menuUtils.js existe en frontend pero nunca se usa (codigo muerto)
-- DashboardController.getMenu() retorna string hardcodeado, no usa MenuService
 - Menu entity tiene EAGER fetch en tenant (innecesario)

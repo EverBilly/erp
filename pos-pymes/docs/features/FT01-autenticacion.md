@@ -54,7 +54,7 @@ un token que el frontend incluye en cada request posterior.
 1. Cliente envia POST /api/auth/login con {username, password}
 2. AuthController recibe y delega a AuthService.authenticateUser()
 3. AuthService:
-   a. Busca usuario por username en BD (UsuarioRepository.findByUsername)
+   a. Busca usuario por username en BD (UserRepository.findByUsername)
    b. Verifica que usuario.active == true
    c. Compara password con BCrypt (passwordEncoder.matches)
    d. Actualiza lastLogin del usuario

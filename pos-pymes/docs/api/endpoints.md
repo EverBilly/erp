@@ -16,19 +16,19 @@
 
 | Metodo | Path | Auth | Descripcion |
 |--------|------|------|-------------|
-| GET | `/usuarios` | SUPER_ADMIN | Listar todos |
-| GET | `/usuarios/activos` | Autenticado | Listar activos |
-| GET | `/usuarios/{id}` | Autenticado | Obtener por ID |
-| GET | `/usuarios/buscar?nombre=X` | Autenticado | Buscar por nombre |
-| GET | `/usuarios/contar` | Autenticado | Estadisticas |
-| GET | `/usuarios/rol/{rolNombre}` | Autenticado | Por nombre de rol |
-| GET | `/usuarios/check-username/{username}` | Autenticado | Verificar username |
-| GET | `/usuarios/check-email/{email}` | Autenticado | Verificar email |
-| POST | `/usuarios` | Autenticado | Crear usuario |
-| PUT | `/usuarios/{id}` | Autenticado | Actualizar usuario |
-| DELETE | `/usuarios/{id}` | Autenticado | Soft delete |
-| PATCH | `/usuarios/{id}/activar` | Autenticado | Reactivar |
-| PATCH | `/usuarios/{id}/desactivar` | Autenticado | Desactivar |
+| GET | `/users` | SUPER_ADMIN | Listar todos |
+| GET | `/users/active` | Autenticado | Listar activos |
+| GET | `/users/{id}` | Autenticado | Obtener por ID |
+| GET | `/users/search?name=X` | Autenticado | Buscar por nombre |
+| GET | `/users/stats` | Autenticado | Estadisticas |
+| GET | `/users/role/{roleName}` | Autenticado | Por nombre de rol |
+| GET | `/users/check-username/{username}` | Autenticado | Verificar username |
+| GET | `/users/check-email/{email}` | Autenticado | Verificar email |
+| POST | `/users` | Autenticado | Crear usuario |
+| PUT | `/users/{id}` | Autenticado | Actualizar usuario |
+| DELETE | `/users/{id}` | Autenticado | Soft delete |
+| PATCH | `/users/{id}/activate` | Autenticado | Reactivar |
+| PATCH | `/users/{id}/deactivate` | Autenticado | Desactivar |
 
 ## Roles
 
@@ -41,16 +41,6 @@
 | Metodo | Path | Auth | Descripcion |
 |--------|------|------|-------------|
 | GET | `/menus` | Autenticado | Menus del usuario segun roles |
-
-## Dashboard
-
-| Metodo | Path | Auth | Descripcion |
-|--------|------|------|-------------|
-| GET | `/dashboard/menu` | Autenticado | Menu del usuario (hardcodeado) |
-| GET | `/dashboard/permissions` | Autenticado | Roles del usuario |
-| GET | `/dashboard/roles` | Autenticado | Roles del usuario (duplicado) |
-| GET | `/dashboard/stats` | ADMIN/SUPER_ADMIN | Stats (hardcodeado) |
-| GET | `/dashboard/profile` | Autenticado | Perfil del usuario actual |
 
 ## Otros
 

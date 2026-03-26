@@ -8,23 +8,23 @@ y asignacion de roles. Solo SUPER_ADMIN puede ver todos los usuarios.
 
 | Metodo | Path | Auth | Descripcion |
 |--------|------|------|-------------|
-| GET | `/api/usuarios` | SUPER_ADMIN | Listar todos los usuarios |
-| GET | `/api/usuarios/activos` | Autenticado | Listar usuarios activos |
-| GET | `/api/usuarios/{id}` | Autenticado | Obtener usuario por ID |
-| GET | `/api/usuarios/buscar?nombre=X` | Autenticado | Buscar por nombre |
-| GET | `/api/usuarios/contar` | Autenticado | Estadisticas (total, activos, inactivos) |
-| GET | `/api/usuarios/rol/{rolNombre}` | Autenticado | Usuarios por nombre de rol |
-| GET | `/api/usuarios/check-username/{username}` | Autenticado | Verificar si username existe |
-| GET | `/api/usuarios/check-email/{email}` | Autenticado | Verificar si email existe |
-| POST | `/api/usuarios` | Autenticado | Crear usuario |
-| PUT | `/api/usuarios/{id}` | Autenticado | Actualizar usuario |
-| DELETE | `/api/usuarios/{id}` | Autenticado | Soft delete (desactivar) |
-| PATCH | `/api/usuarios/{id}/activar` | Autenticado | Reactivar usuario |
-| PATCH | `/api/usuarios/{id}/desactivar` | Autenticado | Desactivar usuario |
+| GET | `/api/users` | SUPER_ADMIN | Listar todos los usuarios |
+| GET | `/api/users/active` | Autenticado | Listar usuarios activos |
+| GET | `/api/users/{id}` | Autenticado | Obtener usuario por ID |
+| GET | `/api/users/search?name=X` | Autenticado | Buscar por nombre |
+| GET | `/api/users/stats` | Autenticado | Estadisticas (total, activos, inactivos) |
+| GET | `/api/users/role/{roleName}` | Autenticado | Usuarios por nombre de rol |
+| GET | `/api/users/check-username/{username}` | Autenticado | Verificar si username existe |
+| GET | `/api/users/check-email/{email}` | Autenticado | Verificar si email existe |
+| POST | `/api/users` | Autenticado | Crear usuario |
+| PUT | `/api/users/{id}` | Autenticado | Actualizar usuario |
+| DELETE | `/api/users/{id}` | Autenticado | Soft delete (desactivar) |
+| PATCH | `/api/users/{id}/activate` | Autenticado | Reactivar usuario |
+| PATCH | `/api/users/{id}/deactivate` | Autenticado | Desactivar usuario |
 
 ## Request/Response
 
-### POST /api/usuarios (crear)
+### POST /api/users (crear)
 
 **Request:**
 ```json
@@ -42,7 +42,7 @@ y asignacion de roles. Solo SUPER_ADMIN puede ver todos los usuarios.
 }
 ```
 
-### PUT /api/usuarios/{id} (actualizar)
+### PUT /api/users/{id} (actualizar)
 
 **Request (todos los campos opcionales):**
 ```json
@@ -59,7 +59,7 @@ y asignacion de roles. Solo SUPER_ADMIN puede ver todos los usuarios.
 }
 ```
 
-### Response (UsuarioResponse)
+### Response (UserResponse)
 ```json
 {
   "id": 1,
@@ -82,7 +82,7 @@ y asignacion de roles. Solo SUPER_ADMIN puede ver todos los usuarios.
 }
 ```
 
-### GET /api/usuarios/contar
+### GET /api/users/stats
 ```json
 {
   "total": 15,
@@ -103,25 +103,25 @@ y asignacion de roles. Solo SUPER_ADMIN puede ver todos los usuarios.
 
 ## Modelo de datos
 - **users** - id, tenant_id, username, email, password_hash, full_name, phone, active, avatar_url, timezone, locale, metadata, login_attempts, locked_until, created_at, last_login
-- **user_roles** - usuario_id, rol_id (tabla puente)
+- **user_roles** - user_id, role_id (tabla puente)
 
 ## Archivos involucrados
 
 ### Backend
-- `usuario/controller/UsuarioController.java` - Endpoints REST
-- `usuario/service/UsuarioService.java` - Logica de negocio
-- `usuario/repository/UsuarioRepository.java` - Queries a BD
-- `usuario/model/Usuario.java` - Entidad JPA
-- `usuario/dto/CrearUsuarioRequest.java` - DTO para crear
-- `usuario/dto/ActualizarUsuarioRequest.java` - DTO para actualizar
-- `usuario/dto/UsuarioResponse.java` - DTO de respuesta
-- `usuario/exception/UsuarioNotFoundException.java` - Excepcion 404
-- `usuario/exception/UsuarioDuplicadoException.java` - Excepcion 409
+- `user/controller/UserController.java` - Endpoints REST
+- `user/service/UserService.java` - Logica de negocio
+- `user/repository/UserRepository.java` - Queries a BD
+- `user/model/User.java` - Entidad JPA
+- `user/dto/CreateUserRequest.java` - DTO para crear
+- `user/dto/UpdateUserRequest.java` - DTO para actualizar
+- `user/dto/UserResponse.java` - DTO de respuesta
+- `user/exception/UserNotFoundException.java` - Excepcion 404
+- `user/exception/DuplicateUserException.java` - Excepcion 409
 
 ### Frontend
-- `pages/usuarios/UsuariosView.jsx` - Router del modulo
-- `pages/usuarios/UsuariosList.jsx` - Listado con busqueda y paginacion
-- `pages/usuarios/UsuarioForm.jsx` - Formulario crear/editar con Formik + Yup
+- `pages/users/UsersView.jsx` - Router del modulo
+- `pages/users/UsersList.jsx` - Listado con busqueda y paginacion
+- `pages/users/UserForm.jsx` - Formulario crear/editar con Formik + Yup
 
 ## Estado
 - [x] CRUD completo (crear, leer, actualizar, soft delete)
@@ -132,11 +132,10 @@ y asignacion de roles. Solo SUPER_ADMIN puede ver todos los usuarios.
 - [x] Validaciones en DTO (@NotBlank, @Email, @Size)
 - [ ] Paginacion server-side (actualmente carga todos)
 - [ ] @PreAuthorize en todos los endpoints (solo GET all tiene)
-- [ ] Tests actualizados (existen pero no compilan)
+- [ ] Tests eliminados (se reescribiran)
 
 ## Problemas conocidos
-- Logica de negocio mezclada en UsuarioController (conversion DTOs, colores de rol)
+- Logica de negocio mezclada en UserController (conversion DTOs, colores de rol)
 - Busqueda y paginacion client-side en frontend (ineficiente)
 - check-username y check-email permiten enumeracion de usuarios
 - Tenant hardcodeado a 1
-- Tests prueban metodos que no existen en el service actual
